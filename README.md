@@ -207,6 +207,14 @@ function hook($event, $params = null, bool $once = false);
 function get_addons_info($name);
 
 /**
+* 获取配置信息
+* @param string $name 插件名
+* @param bool $type 是否获取完整配置
+* @return mixed|array
+*/
+function get_addons_config($name, $type = false)
+
+/**
  * 获取插件Plugin的单例
  * @param string $name 插件名
  * @return mixed|null

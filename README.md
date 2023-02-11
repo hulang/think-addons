@@ -1,5 +1,9 @@
-# think-addons
-The ThinkPHP 6 Addons Package
+## thinkphp6.1+ 插件扩展包
+
+### 环境
+
+1. php >= 7.4.0
+2. thinkphp >=6.1
 
 ## 安装
 > composer require hulang/think-addons

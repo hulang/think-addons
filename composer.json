@@ -1,6 +1,6 @@
 {
     "name": "hulang/think-addons",
-    "description": "The ThinkPHP6.1 Addons Package",
+    "description": "The ThinkPHP6.1+ Addons Package",
     "license": "Apache-2.0",
     "authors": [
         {
@@ -9,8 +9,8 @@
         }
     ],
     "require": {
-        "php": ">=7.2.5",
-        "topthink/framework": "^6.0",
+        "php": ">=7.4.0",
+        "topthink/framework": ">=6.0",
         "topthink/think-view": "^1.0",
         "topthink/think-helper": "^3.0.0"
     },

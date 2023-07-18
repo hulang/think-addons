@@ -1,0 +1,13 @@
+name = {%plugin%}
+title = {%plugin%} 插件
+description = {%plugin%} 插件简介
+status = 0
+install = 0
+author = Yideshi
+requires = 0
+version = 1.0.0
+website = 0
+thumb = 0
+url = /addons/{%plugin%}
+publish_time = {%time%}
+autoload = 0

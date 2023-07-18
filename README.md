@@ -6,7 +6,9 @@
 - ThinkPHP ^8.0
 
 ## 安装
-> composer require hulang/think-addons
+```php
+composer require hulang/think-addons
+```
 
 ## 配置
 

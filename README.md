@@ -9,10 +9,9 @@
 ```php
 composer require hulang/think-addons
 ```
-
 ## 配置
 
-### 生成配置
+### 生成插件配置文件
 
 系统安装后会自动在 config 目录中生成 addons.php 的配置文件，
 如果系统未生成可在命令行执行
@@ -20,12 +19,16 @@ composer require hulang/think-addons
 ```php
 php think addons:config 
 ```
-
-快速生成配置文件
+快速生成插件配置文件。如下图：
+```html
+www  WEB部署目录（或者子目录）
+├─config         全局配置目录
+│  ├─addons.php  插件配置文件
+```
 
 ### 公共配置
 ```php
-'addons' => [
+return [
     // 是否自动读取取插件钩子配置信息（默认是开启）
     'autoload' => true,
     // 当关闭自动获取配置时需要手动配置hooks信息
@@ -34,10 +37,13 @@ php think addons:config
         'testhook'=>'test' // 键为钩子名称，用于在业务中自定义钩子处理，值为实现该钩子的插件，
 					// 多个插件可以用数组也可以用逗号分割
 	],
-    'route' => [],
+    'route' => [
+    	"/demo" => "demo/test/demo", // 键为请求中的路由地址，值为插件/控制器/方法
+	],
     'service' => [],
 ];
 ```
+
 或者在\config目录中新建`addons.php`,内容为：
 ```php
 <?php
@@ -55,6 +61,55 @@ return [
 ];
 ```
 
+## 使用
+### 快速创建插件
+```php
+php think addons:app demo
+```
+执行上面的指令会自动生成demo插件，自动生成的插件目录包含了controller、view目录以及config.php、install.sql、Menu.php、Plugin.php、uninstall.sql、Index控制器、对应视图模板等文件。如下图：
+```html
+www  WEB部署目录（或者子目录）
+├─addons               插件目录
+│  ├─demo              插件应用目录
+│  │  ├─controller     插件应用控制器目录
+│  │  │ ├─Index.php    Index应用控制器
+│  │  ├─view           插件应用视图目录
+│  │  │ ├─index.html   index视图模板文件
+│  │  ├─config.php     配置文件
+│  │  ├─install.sql    安装脚本文件
+│  │  ├─Menu.php       菜单安装配置文件
+│  │  ├─Plugin.php     插件控制器
+│  │  ├─uninstall.sql  卸载脚本文件
+```
+
+### 快速生成插件控制器
+```php
+php think addons:controller demo@Demo
+```
+执行上面的指令会自动生成demo插件应用的Index控制器类库及对应视图模板(index.html)文件。如下图：
+```html
+www  WEB部署目录（或者子目录）
+├─addons              插件目录
+│  ├─demo             插件应用目录
+│  │  ├─controller    插件应用控制器目录
+│  │  │ ├─Demo.php    Demo应用控制器
+│  │  ├─view          插件应用视图目录
+│  │  │ ├─index.html  index视图模板文件
+```
+
+### 快速生成插件视图模板
+```php
+php think addons:view demo
+```
+执行上面的指令会自动生成demo插件应用的视图模板(index.html)文件。如下图：
+```html
+www  WEB部署目录（或者子目录）
+├─addons              插件目录
+│  ├─demo             插件应用目录
+│  │  ├─view          插件应用视图目录
+│  │  │ ├─index.html  index视图模板文件
+```
+
 ## 创建插件
 > 创建的插件可以在view视图中使用，也可以在php业务中使用
  
@@ -65,19 +120,18 @@ return [
 ### 创建test插件
 > 在addons目录中创建test目录
 
-### 创建钩子实现类
-> 在test目录中创建 Plugin.php 类文件。注意：类文件首字母需大写
-
-```shell
-## 插件的基础信息
-info.ini 文件
-name = test	// 插件标识
-title = 插件测试	// 插件名称
-description = thinkph6插件测试	// 插件简介
-status = 0	// 状态
+### 创建插件说明文件`info.ini`
+```ini
+name = test
+title = 插件测试
+description = thinkphp8 插件测试
+status = 0
 author = Addons Demo
 version = 0.1
 ```
+
+### 创建钩子实现类
+> 在test目录中创建 Plugin.php 类文件。注意：类文件首字母需大写
 
 ```php
 <?php
@@ -87,7 +141,6 @@ use think\Addons;
 
 /**
  * 插件测试
- * @author byron sampson
  */
 class Plugin extends Addons	// 需继承think\Addons类
 {
@@ -213,14 +266,6 @@ function hook($event, $params = null, bool $once = false);
 function get_addons_info($name);
 
 /**
-* 获取配置信息
-* @param string $name 插件名
-* @param bool $type 是否获取完整配置
-* @return mixed|array
-*/
-function get_addons_config($name, $type = false)
-
-/**
  * 获取插件Plugin的单例
  * @param string $name 插件名
  * @return mixed|null
@@ -246,14 +291,19 @@ function addons_url($url = '', $param = [], $suffix = true, $domain = false);
 www  WEB部署目录（或者子目录）
 ├─addons           插件目录
 ├─app           应用目录
-│  ├─controller      控制器目录
-│  ├─model           模型目录
-│  ├─ ...            更多类库目录
+│  ├─app_name           应用目录
+│  │  ├─common.php      函数文件
+│  │  ├─controller      控制器目录
+│  │  ├─model           模型目录
+│  │  ├─view            视图目录
+│  │  ├─config          配置目录
+│  │  ├─route           路由目录
+│  │  └─ ...            更多类库目录
 │  │
 │  ├─common.php         公共函数文件
 │  └─event.php          事件定义文件
 │
-├─config                配置目录
+├─config                全局配置目录
 │  ├─app.php            应用配置
 │  ├─cache.php          缓存配置
 │  ├─console.php        控制台配置
@@ -268,11 +318,6 @@ www  WEB部署目录（或者子目录）
 │  ├─trace.php          Trace配置
 │  └─view.php           视图配置
 │
-├─view            视图目录
-├─route                 路由定义目录
-│  ├─route.php          路由定义文件
-│  └─ ...   
-│
 ├─public                WEB目录（对外访问目录）
 │  ├─index.php          入口文件
 │  ├─router.php         快速测试文件
@@ -285,5 +330,4 @@ www  WEB部署目录（或者子目录）
 ├─composer.json         composer 定义文件
 ├─LICENSE.txt           授权说明文件
 ├─README.md             README 文件
-├─think                 命令行入口文件
-```
+├─think                 命令行入口文件```

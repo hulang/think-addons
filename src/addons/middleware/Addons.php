@@ -12,7 +12,7 @@ class Addons
 
     public function __construct(App $app)
     {
-        $this->app  = $app;
+        $this->app = $app;
     }
 
     /**

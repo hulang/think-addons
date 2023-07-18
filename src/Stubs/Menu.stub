@@ -1,0 +1,34 @@
+<?php
+return [
+    [
+        'title'   => '{%plugin%}管理',
+        'm'       => '{%plugin%}',
+        'c'       => 'admin',
+        'a'       => 'index',
+        'sort'    => 0,
+        'display' => '1',
+        'menu'    => [
+            [
+                'title'   => '添加',
+                'm'       => '{%plugin%}',
+                'c'       => 'admin',
+                'a'       => 'add',
+                'sort'    => 0,
+                'display' => '0',
+            ],
+            ['title'  => '修改',
+                'm'       => '{%plugin%}',
+                'c'       => 'admin',
+                'a'       => 'edit',
+                'display' => '0',
+            ],
+            [
+                'title'   => '删除',
+                'm'       => '{%plugin%}',
+                'c'       => 'admin',
+                'a'       => 'del',
+                'display' => '0',
+            ],
+        ],
+    ],
+];

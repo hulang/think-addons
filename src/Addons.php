@@ -27,20 +27,20 @@ abstract class Addons
 
     /**
      * 插件构造函数
-     * Addons constructor.
+     * addons constructor.
      * @param \think\App $app
      */
     public function __construct(App $app)
     {
-        $this->app = $app;
-        $this->request = $app->request;
-        $this->name = $this->getName();
-        $this->addon_path = $app->addons->getAddonsPath() . $this->name . DIRECTORY_SEPARATOR;
+        $this->app          = $app;
+        $this->request      = $app->request;
+        $this->name         = $this->getName();
+        $this->addon_path   = $app->addons->getAddonsPath() . $this->name . DS;
         $this->addon_config = "addon_{$this->name}_config";
-        $this->addon_info = "addon_{$this->name}_info";
-        $this->view = clone View::engine('Think');
+        $this->addon_info   = "addon_{$this->name}_info";
+        $this->view         = clone View::engine('Think');
         $this->view->config([
-            'view_path' => $this->addon_path . 'view' . DIRECTORY_SEPARATOR
+            'view_path' => $this->addon_path . 'view' . DS,
         ]);
 
         // 控制器初始化
@@ -58,8 +58,8 @@ abstract class Addons
      */
     final protected function getName()
     {
-        $class = get_class($this);
-        list(, $name,) = explode('\\', $class);
+        $class                = get_class($this);
+        list(, $name)         = explode('\\', $class);
         $this->request->addon = $name;
 
         return $name;
@@ -69,7 +69,7 @@ abstract class Addons
      * 加载模板输出
      * @param string $template
      * @param array $vars           模板文件名
-     * @return mixed|false|string   模板输出变量
+     * @return false|mixed|string   模板输出变量
      * @throws \think\Exception
      */
     protected function fetch($template = '', $vars = [])
@@ -118,23 +118,19 @@ abstract class Addons
 
     /**
      * 插件基础信息
-     * @return mixed|array
+     * @return array
      */
     final public function getInfo()
     {
-        $info = Config::get($this->addon_info, []);
+        $info = config($this->addon_info, []);
         if ($info) {
             return $info;
         }
-
-        // 文件属性
-        $info = $this->info ?? [];
         // 文件配置
         $info_file = $this->addon_path . 'info.ini';
         if (is_file($info_file)) {
-            $_info = parse_ini_file($info_file, true, INI_SCANNER_TYPED) ?: [];
-            $_info['url'] = addons_url();
-            $info = array_merge($_info, $info);
+            $_info        = parse_ini_file($info_file, true, INI_SCANNER_TYPED) ?: [];
+            $info = array_merge($info, $_info);
         }
         Config::set($info, $this->addon_info);
 
@@ -144,7 +140,7 @@ abstract class Addons
     /**
      * 获取配置信息
      * @param bool $type 是否获取完整配置
-     * @return mixed|array
+     * @return array|mixed
      */
     final public function getConfig($type = false)
     {
@@ -154,7 +150,7 @@ abstract class Addons
         }
         $config_file = $this->addon_path . 'config.php';
         if (is_file($config_file)) {
-            $temp_arr = (array)include $config_file;
+            $temp_arr = (array) include $config_file;
             if ($type) {
                 return $temp_arr;
             }
@@ -167,10 +163,30 @@ abstract class Addons
 
         return $config;
     }
+    /**
+     * 设置插件信息数据
+     * @param $name
+     * @param array $value
+     * @return array
+     */
+    final public function setInfo($name = '', $value = [])
+    {
+        if (empty($name)) {
+            $name = $this->getName();
+        }
+        $info = $this->getInfo($name);
+        $info = array_merge($info, $value);
+        Config::set($info, $name);
+        return $info;
+    }
 
-    //必须实现安装
+    //必须实现安装插件方法
     abstract public function install();
 
-    //必须卸载插件方法
+    //必须实现卸载插件方法
     abstract public function uninstall();
+    //必须实现启用插件方法
+    abstract public function enabled();
+    //必须实现禁用插件方法
+    abstract public function disabled();
 }

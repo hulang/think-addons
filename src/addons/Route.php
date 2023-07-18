@@ -4,32 +4,40 @@ declare(strict_types=1);
 
 namespace think\addons;
 
-use think\helper\Str;
-use think\facade\Event;
-use think\facade\Config;
 use think\exception\HttpException;
+use think\facade\Config;
+use think\facade\Event;
+use think\helper\Str;
 
 class Route
 {
     /**
      * 插件路由请求
+     * @param null $addon
+     * @param null $controller
+     * @param null $action
      * @return mixed
      */
-    public static function execute()
+    public static function execute($addon = null, $controller = null, $action = null)
     {
-        $app = app();
+        $app     = app();
         $request = $app->request;
 
-        $addon = $request->route('addon');
-        $controller = $request->route('controller');
-        $action = $request->route('action');
-
         Event::trigger('addons_begin', $request);
-
+        // 是否自动转换控制器和操作名
+        $convert = $addonsRouteConfig['url_convert'] ?? Config::get('route.url_convert');
+        $filter = $convert ? 'strtolower' : 'trim';
+        $addon = $addon ? trim(call_user_func($filter, $addon)) : '';
+        $controller = $controller ? trim(call_user_func($filter, $controller)) : $app->route->config('default_action');
+        $action = $action ? trim(call_user_func($filter, $action)) : $app->route->config('default_action');
         if (empty($addon) || empty($controller) || empty($action)) {
             throw new HttpException(500, lang('addon can not be empty'));
         }
-
+        $app->http->name($addon);
+        // 插件名是否符合规范
+        if (!preg_match("/^[a-zA-Z0-9]+$/", $addon)) {
+            throw new HttpException(500, lang('addon name is not right'));
+        }
         $request->addon = $addon;
         // 设置当前请求的控制器、操作
         $request->setController($controller)->setAction($action);
@@ -51,13 +59,13 @@ class Route
         }
 
         // 重写视图基础路径
-        $config = Config::get('view');
+        $config              = Config::get('view');
         $config['view_path'] = $app->addons->getAddonsPath() . $addon . DIRECTORY_SEPARATOR . 'view' . DIRECTORY_SEPARATOR;
         Config::set($config, 'view');
 
         // 生成控制器对象
         $instance = new $class($app);
-        $vars = [];
+        $vars     = [];
         if (is_callable([$instance, $action])) {
             // 执行操作方法
             $call = [$instance, $action];
@@ -67,7 +75,7 @@ class Route
             $vars = [$action];
         } else {
             // 操作不存在
-            throw new HttpException(404, lang('addon action %s not found', [get_class($instance).'->'.$action.'()']));
+            throw new HttpException(404, lang('addon action %s not found', [get_class($instance) . '->' . $action . '()']));
         }
         Event::trigger('addons_action_begin', $call);
 

@@ -457,12 +457,12 @@ if (!function_exists('refreshaddons')) {
         return true;
     }
 }
-if (!function_exists('is_really_writable')) {
+if (!function_exists('isReallyWritable')) {
     /**
      * 判断文件或目录是否有写的权限
      * @param mixed $file
      */
-    function is_really_writable($file)
+    function isReallyWritable($file)
     {
         if (DIRECTORY_SEPARATOR == '/' and @ini_get('safe_mode') == false) {
             return is_writable($file);

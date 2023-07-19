@@ -457,24 +457,23 @@ if (!function_exists('refreshaddons')) {
         return true;
     }
 }
-/**
- * 判断文件或目录是否有写的权限
- * @param mixed $file
- */
-function is_really_writable($file)
-{
-    if (DIRECTORY_SEPARATOR == '/' and @ini_get('safe_mode') == false) {
-        return is_writable($file);
+if (!function_exists('is_really_writable')) {
+    /**
+     * 判断文件或目录是否有写的权限
+     * @param mixed $file
+     */
+    function is_really_writable($file)
+    {
+        if (DIRECTORY_SEPARATOR == '/' and @ini_get('safe_mode') == false) {
+            return is_writable($file);
+        }
+        if (!is_file($file) or ($fp = @fopen($file, 'r+')) === false) {
+            return false;
+        }
+        fclose($fp);
+        return true;
     }
-
-    if (!is_file($file) or ($fp = @fopen($file, 'r+')) === false) {
-        return false;
-    }
-    fclose($fp);
-
-    return true;
 }
-
 if (!function_exists('importsql')) {
     /**
      * 导入SQL

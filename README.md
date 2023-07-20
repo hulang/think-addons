@@ -68,13 +68,12 @@ return [
 ### 创建钩子实现类
 > 在test目录中创建 Plugin.php 类文件。注意：类文件首字母需大写
 
-## 插件的基础信息
+## 插件的基础信息`info.ini`文件
 ```shell
-info.ini 文件
-name = test	// 插件标识
-title = 插件测试	// 插件名称
-description = thinkph6插件测试	// 插件简介
-status = 0	// 状态
+name = test
+title = 插件测试
+description = thinkph8插件测试
+status = 0
 author = Addons Demo
 version = 0.1
 ```

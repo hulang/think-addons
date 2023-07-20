@@ -126,9 +126,6 @@ abstract class Addons
         if ($info) {
             return $info;
         }
-
-        // 文件属性
-        $info = $this->info ?? [];
         // 文件配置
         $info_file = $this->addon_path . 'info.ini';
         if (is_file($info_file)) {

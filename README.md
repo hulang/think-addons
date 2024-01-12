@@ -1,288 +1,206 @@
-## ThinkPHP 8.0.0 插件扩展包
+## ThinkPHP 8.0.0 授权扩展包
 
 ### 环境
 
 - php >=8.0.0
 - ThinkPHP ^8.0
 
+> 修改自：zz-studio/think-auth
+
 ## 安装
-```php
-composer require hulang/think-addons
-```
+> composer require hulang/think-auth
 
 ## 配置
 
-### 生成配置
-
-系统安装后会自动在 config 目录中生成 addons.php 的配置文件，
-如果系统未生成可在命令行执行
-
-```php
-php think addons:config 
-```
-
-快速生成配置文件
-
 ### 公共配置
 ```php
-'addons' => [
-    // 是否自动读取取插件钩子配置信息（默认是开启）
-    'autoload' => true,
-    // 当关闭自动获取配置时需要手动配置hooks信息
-    'hooks' => [
-	    // 可以定义多个钩子
-        'testhook'=>'test' // 键为钩子名称，用于在业务中自定义钩子处理，值为实现该钩子的插件，
-					// 多个插件可以用数组也可以用逗号分割
-	],
-    'route' => [],
-    'service' => [],
-];
+// auth配置
+'auth'  => [
+    'auth_on'           => 1, // 权限开关
+    'auth_type'         => 1, // 认证方式，1为实时认证；2为登录认证。
+    'auth_user'         => 'member', // 用户信息不带前缀表名
+],
 ```
-或者在\config目录中新建`addons.php`,内容为：
+
+### 导入数据表
+> `think_` 为自定义的数据表前缀
+
+```sql
+------------------------------
+-- think_auth_rule,规则表
+-- id:主键
+-- name:规则唯一标识
+-- title:规则中文名称
+-- status:状态:为1正常,为0禁用
+-- condition:规则表达式,为空表示存在就验证,不为空表示按照条件验证
+------------------------------
+DROP TABLE IF EXISTS `think_auth_rule`;
+CREATE TABLE `think_auth_rule` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) CHARACTER SET utf8 NOT NULL DEFAULT '',
+  `title` varchar(100) CHARACTER SET utf8 NOT NULL DEFAULT '',
+  `type` tinyint(1) NOT NULL DEFAULT '1',
+  `status` tinyint(1) NOT NULL DEFAULT '1',
+  `condition` varchar(200) CHARACTER SET utf8 NOT NULL DEFAULT '',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC COMMENT='权限路由表';
+------------------------------
+-- think_auth_role 用户组表
+-- id:主键
+-- title:用户组中文名称
+-- status:状态:为1正常,为0禁用
+------------------------------
+DROP TABLE IF EXISTS `think_auth_role`;
+CREATE TABLE `think_auth_role` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `title` varchar(100) CHARACTER SET utf8 NOT NULL DEFAULT '',
+  `status` tinyint(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC COMMENT='权限组';
+
+------------------------------
+-- think_auth_role_user 用户与组关系表
+-- user_id:用户id
+-- role_id:用户组id
+------------------------------
+DROP TABLE IF EXISTS `think_auth_role_user`;
+CREATE TABLE `think_auth_role_user` (
+  `user_id` bigint(20) unsigned NOT NULL,
+  `role_id` int(11) unsigned NOT NULL,
+  UNIQUE KEY `uid_group_id` (`user_id`,`role_id`),
+  KEY `uid` (`user_id`),
+  KEY `group_id` (`role_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC COMMENT='用户及用户组对应表';
+
+------------------------------
+-- think_auth_role_rule 用户与组关系表
+-- rule_id:规则id
+-- role_id:用户组id
+------------------------------
+DROP TABLE IF EXISTS `think_auth_role_rule`;
+CREATE TABLE `think_auth_role_rule` (
+  `rule_id` int(11) unsigned NOT NULL,
+  `role_id` int(11) unsigned NOT NULL,
+  PRIMARY KEY (`rule_id`,`role_id`),
+  UNIQUE KEY `uid_group_id` (`rule_id`,`role_id`),
+  KEY `uid` (`rule_id`),
+  KEY `group_id` (`role_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC COMMENT='权限规则与用户组对应表';
+```
+
+## 原理
+Auth权限认证是按规则进行认证。
+在数据库中我们有 
+
+- 规则表（think_auth_rule） 
+- 用户组表(think_auth_role) 
+- 用户与组关系表（think_auth_role_user）
+- 权限规则与组关系表（think_auth_role_rule）
+
+我们在规则表中定义权限规则， 在用户组表中定义用户与组的关系，在权限规则与组的关系表中定义权限组所拥有的权限。 
+
+下面举例说明：
+
+我们要判断用户是否有显示一个操作按钮的权限， 首先定义一个规则， 在规则表中添加一个名为 show_button 的规则。 然后在用户组表添加一个用户组，定义这个用户组有show_button 的权限规则， 然后在用户与组关系表中定义 UID 为1 的用户 属于刚才这个的这个用户组。 
+
+## 使用
+判断权限方法
+```php
+// 引入类库
+use think\Auth;
+
+// 检测权限
+if(Auth::check('show_button', 1)){// 第一个参数是规则名称,第二个参数是用户UID
+	//有显示操作按钮的权限
+}else{
+	//没有显示操作按钮的权限
+}
+```php
+或通过全局函数进行判断
+```
+if(auth_check('show_button', 1)){// 第一个参数是规则名称,第二个参数是用户UID
+	//有显示操作按钮的权限
+}else{
+	//没有显示操作按钮的权限
+}
+```
+
+Auth类也可以对节点进行认证，我们只要将规则名称，定义为节点名称就行了。 
+可以在公共控制器方法或中间件中进行验证了，以下为中间件的示例
+
+可以通过命令行快速生成权限认证中间件
+```
+php think make:middleware Auth
+```
+这个指令会 `application/http/middleware` 目录下面生成一个 Auth 中间件。
 ```php
 <?php
-return [
-	// 是否自动读取取插件钩子配置信息
-    'autoload' => false,
-    // 当关闭自动获取配置时需要手动配置hooks信息
-    'hooks' => [
-        // 可以定义多个钩子
-        'testhook'=>'test' // 键为钩子名称，用于在业务中自定义钩子处理，值为实现该钩子的插件，
-                    // 多个插件可以用数组也可以用逗号分割
-    ],
-    'route' => [],
-    'service' => [],
-];
-```
+namespace app\http\middleware;
 
-## 创建插件
-> 创建的插件可以在view视图中使用，也可以在php业务中使用
- 
-安装完成后访问系统时会在项目根目录生成名为`addons`的目录，在该目录中创建需要的插件。
+use think\exception\HttpResponseException;
+use think\Auth AS AuthHandle;
+use traits\controller\Jump;
 
-下面写一个例子：
-
-### 创建test插件
-> 在addons目录中创建test目录
-
-### 创建钩子实现类
-> 在test目录中创建 Plugin.php 类文件。注意：类文件首字母需大写
-
-## 插件的基础信息`info.ini`文件
-```shell
-name = test
-title = 插件测试
-description = thinkph8插件测试
-status = 0
-author = Addons Demo
-version = 0.1
-```
-
-```php
-<?php
-namespace addons\test;	// 注意命名空间规范
-
-use think\Addons;
-
-/**
- * 插件测试
- * @author byron sampson
- */
-class Plugin extends Addons	// 需继承think\Addons类
+class Auth
 {
-    /**
-     * 插件安装方法
-     * @return bool
-     */
-    public function install()
-    {
-        return true;
-    }
+    use Jump;
 
     /**
-     * 插件卸载方法
-     * @return bool
-     */
-    public function uninstall()
-    {
-        return true;
-    }
-
-    /**
-     * 实现的testhook钩子方法
+     * 授权业务处理
+     * @param $request
+     * @param \Closure $next
      * @return mixed
      */
-    public function testhook($param)
+    public function handle($request, \Closure $next)
     {
-        // 调用钩子时候的参数信息
-        print_r($param);
-        // 当前插件的配置信息，配置信息存在当前目录的config.php文件中，见下方
-        print_r($this->getConfig());
-        // 可以返回模板，模板文件默认读取的为插件目录中的文件。模板名不能为空！
-        return $this->fetch('info');
+        // 白名单
+        $allow = ['user/login'];
+
+        $rule = strtolower("{$request->controller()}/{$request->action()}");
+        
+        // 初始化 user_id
+        $user_id = is_login();
+
+        // 权限检查
+        $check = AuthHandle::check($rule, $user_id);
+        if (false === $check) {
+            $this->error('[403] 未授权访问');
+        }
+
+        return $next($request);
     }
 
 }
 ```
+这时候我们可以在数据库中添加的节点规则， 格式为： “控制器名称/方法名称”
 
-### 创建插件配置文件
-> 在test目录中创建config.php类文件，插件配置文件可以省略。
-
-```php
-<?php
-return [
-    'display' => [
-        'title' => '是否显示:',
-        'type' => 'radio',
-        'options' => [
-            '1' => '显示',
-            '0' => '不显示'
-        ],
-        'value' => '1'
-    ]
-];
+Auth 类 还可以多个规则一起认证 如： 
 ```
-
-### 创建钩子模板文件
-> 在test->view目录中创建info.html模板文件，钩子在使用fetch方法时对应的模板文件。
-
-```html
-<h1>hello tpl</h1>
-
-如果插件中需要有链接或提交数据的业务，可以在插件中创建controller业务文件，
-要访问插件中的controller时使用addon_url生成url链接。
-如下：
-<a href="{:addons_url('Action/link')}">link test</a>
-或
-<a href="{:addons_url('test://Action/link')}">link test</a>
-格式为：
-test为插件名，Action为controller中的类名[多级控制器可以用.分割]，link为controller中的方法
+$auth->check('rule1,rule2',uid); 
 ```
-
-### 创建插件的controller文件
-> 在test目录中创建controller目录，在controller目录中创建Index.php文件
-> controller类的用法与tp6中的controller一致
-
-```php
-<?php
-namespace addons\test\controller;
-
-class Index
-{
-    public function link()
-    {
-        echo 'hello link';
-    }
-}
+表示 认证用户只要有rule1的权限或rule2的权限，只要有一个规则的权限，认证返回结果就为true 即认证通过。 默认多个权限的关系是 “or” 关系，也就是说多个权限中，只要有个权限通过则通过。 我们也可以定义为 “and” 关系
 ```
-
-## 使用钩子
-> 创建好插件后就可以在正常业务中使用该插件中的钩子了
-> 使用钩子的时候第二个参数可以省略
-
-### 模板中使用钩子
-
-```html
-<div>{:hook('testhook', ['id'=>1])}</div>
+$auth->check('rule1,rule2',uid,'and'); 
 ```
+第三个参数指定为"and" 表示多个规则以and关系进行认证， 这时候多个规则同时通过认证才有权限。只要一个规则没有权限则就会返回false。
 
-### php业务中使用
-> 只要是thinkphp6正常流程中的任意位置均可以使用
+Auth认证，一个用户可以属于多个用户组。 比如我们对 show_button这个规则进行认证， 用户A 同时属于 用户组1 和用户组2 两个用户组 ， 用户组1 没有show_button 规则权限， 但如果用户组2 有show_button 规则权限，则一样会权限认证通过。 
 
-```php
-hook('testhook', ['id'=>1])
-```
+Auth类还可以按用户属性进行判断权限， 比如
+按照用户积分进行判断， 假设我们的用户表 (think_members) 有字段 score 记录了用户积分。 
+我在规则表添加规则时，定义规则表的condition 字段，condition字段是规则条件，默认为空 表示没有附加条件，用户组中只有规则 就通过认证。
+如果定义了 condition字段，用户组中有规则不一定能通过认证，程序还会判断是否满足附加条件。
+比如我们添加几条规则： 
 
-### 插件公共方法
-```php
-/**
- * 处理插件钩子
- * @param string $event 钩子名称
- * @param array|null $params 传入参数
- * @param bool $once 是否只返回一个结果
- * @return mixed
- */
-function hook($event, $params = null, bool $once = false);
+> `name`字段：grade1 `condition`字段：{score}<100 <br/>
+> `name`字段：grade2 `condition`字段：{score}>100 and {score}<200<br/>
+> `name`字段：grade3 `condition`字段：{score}>200 and {score}<300
 
-/**
- * 读取插件的基础信息
- * @param string $name 插件名
- * @return array
- */
-function get_addons_info($name);
+这里 `{score}` 表示 `think_members` 表 中字段 `score` 的值。 
 
-/**
-* 获取配置信息
-* @param string $name 插件名
-* @param bool $type 是否获取完整配置
-* @return mixed|array
-*/
-function get_addons_config($name, $type = false)
+那么这时候 
 
-/**
- * 获取插件Plugin的单例
- * @param string $name 插件名
- * @return mixed|null
- */
-function get_addons_instance($name);
-
-/**
- * 插件显示内容里生成访问插件的url
- * @param $url 在插件控制器中可忽略插件名，在非插件中生成时需指定插件名。例：插件名://控制器/方法
- * @param array $param
- * @param bool|string $suffix 生成的URL后缀
- * @param bool|string $domain 域名
- * @return bool|string
- */
-function addons_url($url = '', $param = [], $suffix = true, $domain = false);
-
-```
-
-## 插件目录结构
-### 最终生成的目录结构为
-
-```html
-www  WEB部署目录（或者子目录）
-├─addons           插件目录
-├─app           应用目录
-│  ├─controller      控制器目录
-│  ├─model           模型目录
-│  ├─ ...            更多类库目录
-│  │
-│  ├─common.php         公共函数文件
-│  └─event.php          事件定义文件
-│
-├─config                配置目录
-│  ├─app.php            应用配置
-│  ├─cache.php          缓存配置
-│  ├─console.php        控制台配置
-│  ├─cookie.php         Cookie配置
-│  ├─database.php       数据库配置
-│  ├─filesystem.php     文件磁盘配置
-│  ├─lang.php           多语言配置
-│  ├─log.php            日志配置
-│  ├─middleware.php     中间件配置
-│  ├─route.php          URL和路由配置
-│  ├─session.php        Session配置
-│  ├─trace.php          Trace配置
-│  └─view.php           视图配置
-│
-├─view            视图目录
-├─route                 路由定义目录
-│  ├─route.php          路由定义文件
-│  └─ ...   
-│
-├─public                WEB目录（对外访问目录）
-│  ├─index.php          入口文件
-│  ├─router.php         快速测试文件
-│  └─.htaccess          用于apache的重写
-│
-├─extend                扩展类库目录
-├─runtime               应用的运行时目录（可写，可定制）
-├─vendor                Composer类库目录
-├─.example.env          环境变量示例文件
-├─composer.json         composer 定义文件
-├─LICENSE.txt           授权说明文件
-├─README.md             README 文件
-├─think                 命令行入口文件
-```
+> $auth->check('grade1', uid) 是判断用户积分是不是0-100<br/>
+> $auth->check('grade2', uid) 判断用户积分是不是在100-200<br/>
+> $auth->check('grade3', uid) 判断用户积分是不是在200-300

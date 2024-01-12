@@ -32,7 +32,7 @@ php think addons:config
     'hooks' => [
 	    // 可以定义多个钩子
         'testhook'=>'test' // 键为钩子名称，用于在业务中自定义钩子处理，值为实现该钩子的插件，
-					// 多个插件可以用数组也可以用逗号分割
+        // 多个插件可以用数组也可以用逗号分割
 	],
     'route' => [],
     'service' => [],
@@ -42,13 +42,13 @@ php think addons:config
 ```php
 <?php
 return [
-	// 是否自动读取取插件钩子配置信息
+    // 是否自动读取取插件钩子配置信息
     'autoload' => false,
     // 当关闭自动获取配置时需要手动配置hooks信息
     'hooks' => [
         // 可以定义多个钩子
         'testhook'=>'test' // 键为钩子名称，用于在业务中自定义钩子处理，值为实现该钩子的插件，
-                    // 多个插件可以用数组也可以用逗号分割
+        // 多个插件可以用数组也可以用逗号分割
     ],
     'route' => [],
     'service' => [],
@@ -115,11 +115,11 @@ class Plugin extends Addons	// 需继承think\Addons类
      */
     public function testhook($param)
     {
-		// 调用钩子时候的参数信息
+        // 调用钩子时候的参数信息
         print_r($param);
-		// 当前插件的配置信息，配置信息存在当前目录的config.php文件中，见下方
+        // 当前插件的配置信息，配置信息存在当前目录的config.php文件中，见下方
         print_r($this->getConfig());
-		// 可以返回模板，模板文件默认读取的为插件目录中的文件。模板名不能为空！
+        // 可以返回模板，模板文件默认读取的为插件目录中的文件。模板名不能为空！
         return $this->fetch('info');
     }
 

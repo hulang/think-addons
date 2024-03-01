@@ -6,6 +6,32 @@ use think\facade\Event;
 use think\facade\Route;
 use think\helper\Str;
 
+// 插件类库自动载入
+spl_autoload_register(function ($class) {
+
+    $class = ltrim($class, '\\');
+
+    $dir = app()->getRootPath();
+    $namespace = 'addons';
+
+    if (strpos($class, $namespace) === 0) {
+        $class = substr($class, strlen($namespace));
+        $path = '';
+        if (($pos = strripos($class, '\\')) !== false) {
+            $path = str_replace('\\', '/', substr($class, 0, $pos)) . '/';
+            $class = substr($class, $pos + 1);
+        }
+        $path .= str_replace('_', '/', $class) . '.php';
+        $dir .= $namespace . $path;
+        if (file_exists($dir)) {
+            include $dir;
+            return true;
+        }
+        return false;
+    }
+    return false;
+});
+
 if (!function_exists('hook')) {
     /**
      * 处理插件钩子
@@ -145,7 +171,6 @@ if (!function_exists('addons_url')) {
                 $param = array_merge($query, $param);
             }
         }
-
         return Route::buildUrl("@addons/{$addons}/{$controller}/{$action}", $param)->suffix($suffix)->domain($domain);
     }
 }

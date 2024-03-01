@@ -101,7 +101,6 @@ if (!function_exists('get_addons_instance')) {
         $class = get_addons_class($name);
         if (class_exists($class)) {
             $_addons[$name] = new $class(app());
-
             return $_addons[$name];
         } else {
             return null;

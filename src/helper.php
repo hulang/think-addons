@@ -6,6 +6,12 @@ use think\facade\Event;
 use think\facade\Route;
 use think\helper\Str;
 
+\think\Console::starting(function (\think\Console $console) {
+    $console->addCommands([
+        'addons:config' => '\\think\\addons\\command\\SendConfig'
+    ]);
+});
+
 // 插件类库自动载入
 spl_autoload_register(function ($class) {
 
@@ -95,6 +101,7 @@ if (!function_exists('get_addons_instance')) {
         $class = get_addons_class($name);
         if (class_exists($class)) {
             $_addons[$name] = new $class(app());
+
             return $_addons[$name];
         } else {
             return null;
@@ -171,6 +178,7 @@ if (!function_exists('addons_url')) {
                 $param = array_merge($query, $param);
             }
         }
+
         return Route::buildUrl("@addons/{$addons}/{$controller}/{$action}", $param)->suffix($suffix)->domain($domain);
     }
 }

@@ -6,12 +6,6 @@ use think\facade\Event;
 use think\facade\Route;
 use think\helper\Str;
 
-\think\Console::starting(function (\think\Console $console) {
-    $console->addCommands([
-        'addons:config' => '\\think\\addons\\command\\SendConfig'
-    ]);
-});
-
 // 插件类库自动载入
 spl_autoload_register(function ($class) {
 
@@ -29,14 +23,12 @@ spl_autoload_register(function ($class) {
         }
         $path .= str_replace('_', '/', $class) . '.php';
         $dir .= $namespace . $path;
-
         if (file_exists($dir)) {
             include $dir;
             return true;
         }
         return false;
     }
-
     return false;
 });
 
@@ -51,7 +43,6 @@ if (!function_exists('hook')) {
     function hook($event, $params = null, bool $once = false)
     {
         $result = Event::trigger($event, $params, $once);
-
         return join('', $result);
     }
 }
@@ -68,7 +59,6 @@ if (!function_exists('get_addons_info')) {
         if (!$addon) {
             return [];
         }
-
         return $addon->getInfo();
     }
 }
@@ -105,7 +95,6 @@ if (!function_exists('get_addons_instance')) {
         $class = get_addons_class($name);
         if (class_exists($class)) {
             $_addons[$name] = new $class(app());
-
             return $_addons[$name];
         } else {
             return null;
@@ -127,7 +116,6 @@ if (!function_exists('get_addons_class')) {
         // 处理多级控制器情况
         if (!is_null($class) && strpos($class, '.')) {
             $class = explode('.', $class);
-
             $class[count($class) - 1] = Str::studly(end($class));
             $class = implode('\\', $class);
         } else {
@@ -140,7 +128,6 @@ if (!function_exists('get_addons_class')) {
             default:
                 $namespace = '\\addons\\' . $name . '\\Plugin';
         }
-
         return class_exists($namespace) ? $namespace : '';
     }
 }

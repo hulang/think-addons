@@ -68,8 +68,8 @@ return [
 ### 创建钩子实现类
 > 在test目录中创建 Plugin.php 类文件。注意：类文件首字母需大写
 
+### 插件`info.json`文件基础信息
 ```shell
-## 插件[info.json]文件基础信息
 {
     "name": "test",
     "title": "插件测试",
@@ -132,7 +132,7 @@ class Plugin extends Addons	// 需继承think\Addons类
 ```
 
 ### 创建插件配置文件
-> 在test目录中创建config.json配置文件，插件配置文件可以省略。
+> 在test目录中创建`config.json`配置文件，插件配置文件可以省略。
 
 ```js
 {
@@ -258,7 +258,7 @@ www  WEB部署目录（或者子目录）
 │  └─event.php          事件定义文件
 │
 ├─config                配置目录
-│  ├─`addons.php`         `插件配置`
+│  ├─addons.php         插件配置
 │  ├─app.php            应用配置
 │  ├─cache.php          缓存配置
 │  ├─console.php        控制台配置

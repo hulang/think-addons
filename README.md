@@ -69,14 +69,19 @@ return [
 > 在test目录中创建 Plugin.php 类文件。注意：类文件首字母需大写
 
 ```shell
-## 插件的基础信息
-info.ini 文件
-name = test	// 插件标识
-title = 插件测试	// 插件名称
-description = thinkph6插件测试	// 插件简介
-status = 0	// 状态
-author = Addons Demo
-version = 0.1
+## 插件[info.json]文件基础信息
+{
+    "name": "test",
+    "title": "插件测试",
+    "description": "Think PHP 8插件测试",
+    "website": "https://github.com/hulang/think-addons",
+    "status": "0",
+    "is_admin": "0",
+    "is_index": "0",
+    "install": "1",
+    "author": "hulangfy@163.com",
+    "version": "1.0.0"
+}
 ```
 
 ```php
@@ -127,21 +132,20 @@ class Plugin extends Addons	// 需继承think\Addons类
 ```
 
 ### 创建插件配置文件
-> 在test目录中创建config.php类文件，插件配置文件可以省略。
+> 在test目录中创建config.json配置文件，插件配置文件可以省略。
 
-```php
-<?php
-return [
-    'display' => [
-        'title' => '是否显示:',
-        'type' => 'radio',
-        'options' => [
-            '1' => '显示',
-            '0' => '不显示'
-        ],
-        'value' => '1'
-    ]
-];
+```js
+{
+    "display": {
+        "title": "是否显示:",
+        "type": "radio",
+        "options": {
+            "1": "显示",
+            "0": "不显示"
+        },
+        "value": "1"
+    }
+}
 ```
 
 ### 创建钩子模板文件
@@ -254,6 +258,7 @@ www  WEB部署目录（或者子目录）
 │  └─event.php          事件定义文件
 │
 ├─config                配置目录
+│  ├─`addons.php`         `插件配置`
 │  ├─app.php            应用配置
 │  ├─cache.php          缓存配置
 │  ├─console.php        控制台配置

@@ -60,7 +60,7 @@ abstract class Addons
     final protected function getName()
     {
         $class = get_class($this);
-        [, $name, ] = explode('\\', $class);
+        [, $name,] = explode('\\', $class);
         $this->request->addon = $name;
 
         return $name;
@@ -129,10 +129,10 @@ abstract class Addons
             return $info;
         }
         // 文件配置
-        $info_file = $this->addon_path . 'info.ini';
+        $info_file = $this->addon_path . 'info.json';
 
         if (is_file($info_file)) {
-            $_info = parse_ini_file($info_file, true, INI_SCANNER_TYPED) ?: [];
+            $_info = json_decode($info_file) ?: [];
             $_info['url'] = addons_url();
             $info = array_merge($_info, $info);
         }
@@ -154,10 +154,10 @@ abstract class Addons
         if ($config) {
             return $config;
         }
-        $config_file = $this->addon_path . 'config.php';
+        $config_file = $this->addon_path . 'config.json';
 
         if (is_file($config_file)) {
-            $temp_arr = (array)include $config_file;
+            $temp_arr = json_decode($config_file);
 
             if ($type) {
                 return $temp_arr;

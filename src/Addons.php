@@ -60,7 +60,7 @@ abstract class Addons
     final protected function getName()
     {
         $class = get_class($this);
-        [, $name, ] = explode('\\', $class);
+        [, $name,] = explode('\\', $class);
         $this->request->addon = $name;
 
         return $name;
@@ -118,6 +118,25 @@ abstract class Addons
     }
 
     /**
+     * 读取文件内容
+     * @param string $filename 文件名
+     * @return mixed|string 文件内容
+     */
+    protected function readFile($filename)
+    {
+        $content = '';
+        if (function_exists('file_get_contents')) {
+            @($content = file_get_contents($filename));
+        } else {
+            if (@($fp = fopen($filename, 'r'))) {
+                @($content = fread($fp, filesize($filename)));
+                @fclose($fp);
+            }
+        }
+        return $content;
+    }
+
+    /**
      * 插件基础信息
      * @return mixed|array
      */
@@ -130,13 +149,11 @@ abstract class Addons
         }
         // 文件配置
         $info_file = $this->addon_path . 'info.json';
-
         if (is_file($info_file)) {
-            $_info = json_decode($info_file) ?: [];
+            $_info = json_decode($this->readFile($info_file), true);
             $_info['url'] = addons_url();
             $info = array_merge($_info, $info);
         }
-
         Config::set($info, $this->addon_info);
 
         return isset($info) ? $info : [];
@@ -157,7 +174,7 @@ abstract class Addons
         $config_file = $this->addon_path . 'config.json';
 
         if (is_file($config_file)) {
-            $temp_arr = json_decode($config_file);
+            $temp_arr = json_decode($this->readFile($config_file), true);
 
             if ($type) {
                 return $temp_arr;

@@ -69,6 +69,23 @@ if (!function_exists('get_addons_info')) {
     }
 }
 
+if (!function_exists('set_addons_info')) {
+    /**
+     * 插件更新[info]配置文件
+     * @param string $name 插件名
+     * @param array $array 数据
+     * @return mixed|bool
+     */
+    function set_addons_info($name = '', $array = [])
+    {
+        $addon = get_addons_instance($name);
+        if (!$addon) {
+            return [];
+        }
+        return $addon->setInfo($name, $array);
+    }
+}
+
 if (!function_exists('get_addons_config')) {
     /**
      * 获取配置信息
@@ -83,6 +100,23 @@ if (!function_exists('get_addons_config')) {
             return [];
         }
         return $addon->getConfig($type);
+    }
+}
+
+if (!function_exists('set_addons_config')) {
+    /**
+     * 插件更新[config]配置文件
+     * @param string $name 插件名
+     * @param array $array 数据
+     * @return mixed|bool
+     */
+    function get_addons_config($name = '', $array = [])
+    {
+        $addon = get_addons_instance($name);
+        if (!$addon) {
+            return [];
+        }
+        return $addon->setConfig($name, $array);
     }
 }
 

@@ -116,13 +116,28 @@ abstract class Addons
 
         return $this;
     }
-
+    /**
+     * 创建目录
+     * @param string $dir 目录名
+     * @return mixed|bool true 成功/false 失败
+     */
+    final public function mkDir($dir)
+    {
+        $dir = rtrim($dir, '/') . '/';
+        if (!is_dir($dir)) {
+            if (mkdir($dir, 0700) == false) {
+                return false;
+            }
+            return true;
+        }
+        return true;
+    }
     /**
      * 读取文件内容
      * @param string $filename 文件名
      * @return mixed|string 文件内容
      */
-    protected function readFile($filename)
+    final public function readFile($filename)
     {
         $content = '';
         if (function_exists('file_get_contents')) {
@@ -135,9 +150,51 @@ abstract class Addons
         }
         return $content;
     }
+    /**
+     * 写文件
+     * @param string $filename 文件名
+     * @param string $writetext 文件内容
+     * @param string $openmod 打开方式
+     * @return mixed|bool true 成功/false 失败
+     */
+    final public function writeFile($filename, $writetext, $openmod = 'w')
+    {
+        if (@($fp = fopen($filename, $openmod))) {
+            flock($fp, 2);
+            fwrite($fp, $writetext);
+            fclose($fp);
+            return true;
+        } else {
+            return false;
+        }
+    }
+    /**
+     * 插件更新[info]配置文件
+     *
+     * @param string $name 插件名
+     * @param array $array 数据
+     * @return mixed|bool
+     */
+    final public function setInfo($name = '', $array = [])
+    {
+        $path = $this->addon_path;
+        if (!empty($name)) {
+            $path = $this->app->addons->getAddonsPath() . $name . DIRECTORY_SEPARATOR;
+        }
+        $config = $path . 'info.json';
+        if (!is_file($path)) {
+            $this->mkDir($path);
+        }
+        $list = [];
+        foreach ($array as $k => $v) {
+            $list[$k] = $v;
+        }
+        $result = $this->writeFile($config, json_encode($array, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        return $result;
+    }
 
     /**
-     * 插件基础信息
+     * 获取插件基础信息
      * @return mixed|array
      */
     final public function getInfo()
@@ -158,7 +215,26 @@ abstract class Addons
 
         return isset($info) ? $info : [];
     }
-
+    /**
+     * 插件更新[config]配置文件
+     *
+     * @param string $name 插件名
+     * @param array $array 数据
+     * @return mixed|bool
+     */
+    final public function setConfig($name = '', $array = [])
+    {
+        $path = $this->addon_path;
+        if (!empty($name)) {
+            $path = $this->app->addons->getAddonsPath() . $name . DIRECTORY_SEPARATOR;
+        }
+        $config = $path . 'config.json';
+        if (!is_file($path)) {
+            $this->mkDir($path);
+        }
+        $result = $this->writeFile($config, json_encode($array, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        return $result;
+    }
     /**
      * 获取配置信息
      * @param bool $type 是否获取完整配置

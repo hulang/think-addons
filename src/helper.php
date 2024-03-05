@@ -110,7 +110,7 @@ if (!function_exists('set_addons_config')) {
      * @param array $array 数据
      * @return mixed|bool
      */
-    function get_addons_config($name = '', $array = [])
+    function set_addons_config($name = '', $array = [])
     {
         $addon = get_addons_instance($name);
         if (!$addon) {

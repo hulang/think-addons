@@ -60,7 +60,7 @@ return [
 {
     "name": "test",
     "title": "插件测试",
-    "description": "Think PHP 8插件测试",
+    "description": "ThinkPHP8 插件测试",
     "website": "https://github.com/hulang/think-addons",
     "status": "0",
     "is_admin": "0",

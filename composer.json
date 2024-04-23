@@ -24,17 +24,9 @@
     },
     "extra": {
         "think": {
-            "services": [
-                "think\\addons\\Service"
-            ],
             "config":{
                 "addons": "src/config.php"
             }
         }
-    },
-    "scripts" : {
-        "post-install-cmd": [
-            "php think addons:config"
-        ]
     }
 }

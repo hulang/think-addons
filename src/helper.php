@@ -6,6 +6,12 @@ use think\facade\Event;
 use think\facade\Route;
 use think\helper\Str;
 
+\think\Console::starting(function (\think\Console $console) {
+    $console->addCommands([
+        'addons:config' => '\\think\\addons\\command\\SendConfig'
+    ]);
+});
+
 // 插件类库自动载入
 spl_autoload_register(function ($class) {
 

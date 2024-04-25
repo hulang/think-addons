@@ -24,7 +24,6 @@ abstract class Addons
     protected $addon_config;
     // 插件信息
     protected $addon_info;
-
     /**
      * 插件构造函数
      * Addons constructor.
@@ -62,7 +61,6 @@ abstract class Addons
         $class = get_class($this);
         [, $name,] = explode('\\', $class);
         $this->request->addon = $name;
-
         return $name;
     }
 
@@ -100,7 +98,6 @@ abstract class Addons
     protected function assign($name, $value = '')
     {
         $this->view->assign([$name => $value]);
-
         return $this;
     }
 
@@ -113,7 +110,6 @@ abstract class Addons
     protected function engine($engine)
     {
         $this->view->engine($engine);
-
         return $this;
     }
     /**
@@ -137,16 +133,11 @@ abstract class Addons
      * @param string $filename 文件名
      * @return mixed|string 文件内容
      */
-    final public function readFile($filename)
+    final public function readFile($filename = '')
     {
         $content = '';
-        if (function_exists('file_get_contents')) {
-            @($content = file_get_contents($filename));
-        } else {
-            if (@($fp = fopen($filename, 'r'))) {
-                @($content = fread($fp, filesize($filename)));
-                @fclose($fp);
-            }
+        if (!empty($filename) && is_file($filename)) {
+            $content = file_get_contents($filename);
         }
         return $content;
     }
@@ -154,16 +145,18 @@ abstract class Addons
      * 写文件
      * @param string $filename 文件名
      * @param string $writetext 文件内容
-     * @param string $openmod 打开方式
-     * @return mixed|bool true 成功/false 失败
+     * @param string $mode 写入文件模式
+     * @return mixed|bool
      */
-    final public function writeFile($filename, $writetext, $openmod = 'w')
+    final public function writeFile($filename = '', $writetext = '', $mode = LOCK_EX)
     {
-        if (@($fp = fopen($filename, $openmod))) {
-            flock($fp, 2);
-            fwrite($fp, $writetext);
-            fclose($fp);
-            return true;
+        if (!empty($filename) && !empty($writetext)) {
+            $size = file_put_contents($filename, $writetext, $mode);
+            if ($size > 0) {
+                return true;
+            } else {
+                return false;
+            }
         } else {
             return false;
         }
@@ -200,7 +193,6 @@ abstract class Addons
     final public function getInfo()
     {
         $info = Config::get($this->addon_info, []);
-
         if ($info) {
             return $info;
         }
@@ -212,7 +204,6 @@ abstract class Addons
             $info = array_merge($_info, $info);
         }
         Config::set($info, $this->addon_info);
-
         return isset($info) ? $info : [];
     }
     /**
@@ -243,27 +234,21 @@ abstract class Addons
     final public function getConfig($type = false)
     {
         $config = Config::get($this->addon_config, []);
-
         if ($config) {
             return $config;
         }
         $config_file = $this->addon_path . 'config.json';
-
         if (is_file($config_file)) {
             $temp_arr = json_decode($this->readFile($config_file), true);
-
             if ($type) {
                 return $temp_arr;
             }
-
             foreach ($temp_arr as $key => $value) {
                 $config[$key] = $value['value'];
             }
             unset($temp_arr);
         }
-
         Config::set($config, $this->addon_config);
-
         return $config;
     }
 

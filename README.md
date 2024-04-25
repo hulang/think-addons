@@ -9,7 +9,6 @@
 ```php
 composer require hulang/think-addons
 ```
-```
 
 ## 配置
 

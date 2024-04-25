@@ -1,9 +1,9 @@
-## ThinkPHP 8.0.0 插件扩展包
+## ThinkPHP 8.0.0 插件包
 
 ### 环境
 
 - php >=8.0.0
-- ThinkPHP ^8.0
+- ThinkPHP ^8.0.0
 
 ## 安装
 ```php

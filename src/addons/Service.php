@@ -112,7 +112,7 @@ class Service extends \think\Service
             }
             Cache::set('hooks', $hooks);
         }
-        //如果在插件中有定义 AddonsInit，则直接执行
+        // 如果在插件中有定义 AddonsInit，则直接执行
         if (isset($hooks['AddonsInit'])) {
             foreach ($hooks['AddonsInit'] as $k => $v) {
                 Event::trigger('AddonsInit', $v);

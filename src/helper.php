@@ -14,12 +14,9 @@ use think\helper\Str;
 
 // 插件类库自动载入
 spl_autoload_register(function ($class) {
-
     $class = ltrim($class, '\\');
-
     $dir = app()->getRootPath();
     $namespace = 'addons';
-
     if (strpos($class, $namespace) === 0) {
         $class = substr($class, strlen($namespace));
         $path = '';

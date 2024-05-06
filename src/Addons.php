@@ -67,8 +67,8 @@ abstract class Addons
     /**
      * 加载模板输出
      * @param string $template
-     * @param array $vars           模板文件名
-     * @return mixed|false|string   模板输出变量
+     * @param array $vars 模板文件名
+     * @return mixed|false|string 模板输出变量
      * @throws \think\Exception
      */
     protected function fetch($template = '', $vars = [])
@@ -79,8 +79,8 @@ abstract class Addons
     /**
      * 渲染内容输出
      * @access protected
-     * @param  string $content 模板内容
-     * @param  array  $vars    模板输出变量
+     * @param string $content 模板内容
+     * @param array $vars 模板输出变量
      * @return mixed
      */
     protected function display($content = '', $vars = [])
@@ -91,8 +91,8 @@ abstract class Addons
     /**
      * 模板变量赋值
      * @access protected
-     * @param  mixed $name  要显示的模板变量
-     * @param  mixed $value 变量的值
+     * @param mixed $name 要显示的模板变量
+     * @param mixed $value 变量的值
      * @return mixed|$this
      */
     protected function assign($name, $value = '')
@@ -104,7 +104,7 @@ abstract class Addons
     /**
      * 初始化模板引擎
      * @access protected
-     * @param  array|string $engine 引擎参数
+     * @param array|string $engine 引擎参数
      * @return mixed|$this
      */
     protected function engine($engine)

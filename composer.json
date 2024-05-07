@@ -31,10 +31,5 @@
                 "addons": "src/config.php"
             }
         }
-    },
-    "scripts" : {
-        "post-install-cmd": [
-            "php think addons:config"
-        ]
     }
 }

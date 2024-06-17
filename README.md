@@ -1,4 +1,8 @@
-## ThinkPHP 8.0.0 插件包
+### ThinkPHP 8.0.0 插件包
+
+<p align="center"> 
+  您是第  <img src="https://profile-counter.glitch.me/github:hulang:think-addons/count.svg" />位访问者
+</p>
 
 ### 环境
 

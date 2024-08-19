@@ -34,6 +34,7 @@ class Service extends \think\Service
         Lang::load([
             $this->app->getRootPath() . '/vendor/hulang/think-addons/src/lang/zh-cn.php'
         ]);
+        $this->autoloadRegister();
         // 自动加载插件的类文件,提高插件的使用便捷性
         $this->autoload();
         // 加载插件的事件处理,使得插件可以参与到应用的生命周期中
@@ -296,5 +297,29 @@ class Service extends \think\Service
         }
         // 返回插件的配置信息
         return $addon->getConfig();
+    }
+
+    /**
+     * 插件类库自动载入
+     * 
+     * @return mixed|bool
+     */
+    public function autoloadRegister()
+    {
+        $dir = getAddonsPath();
+        $list = FileHelper::getFolder($dir);
+        if (!empty($list)) {
+            foreach ($list as $k => $v) {
+                $file = $dir . $v['name'] . DIRECTORY_SEPARATOR . 'Plugin.php';
+                if (file_exists($file)) {
+                    include $file;
+                    echo ($file);
+                    echo (PHP_EOL);
+                    return true;
+                }
+            }
+        } else {
+            return true;
+        }
     }
 }

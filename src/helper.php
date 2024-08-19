@@ -4,13 +4,18 @@ declare(strict_types=1);
 
 use think\facade\Event;
 use think\facade\Route;
-use think\facade\App;
 use think\helper\Str;
+
+\think\Console::starting(function (\think\Console $console) {
+    $console->addCommands([
+        'addons:config' => '\\think\\addons\\command\\SendConfig'
+    ]);
+});
 
 // 插件类库自动载入
 spl_autoload_register(function ($class) {
     $class = ltrim($class, '\\');
-    $dir = App::getRootPath();
+    $dir = app()->getRootPath();
     $namespace = 'addons';
     if (strpos($class, $namespace) === 0) {
         $class = substr($class, strlen($namespace));

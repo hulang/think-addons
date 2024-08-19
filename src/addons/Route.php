@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace think\addons;
 
+use think\facade\Lang;
 use think\helper\Str;
 use think\facade\Event;
 use think\facade\Config;
@@ -12,80 +13,174 @@ use think\exception\HttpException;
 class Route
 {
     /**
-     * 插件路由执行方法
-     * 该方法用于处理插件的路由请求,通过解析请求中的路由信息,找到对应的插件、控制器和操作,并执行相应的逻辑
-     * 如果插件、控制器或操作不存在,或者插件被禁用,将抛出相应的异常
-     * 在执行操作之前,会触发一系列的事件,允许其他地方对插件的请求进行干预
-     * @return mixed 返回执行操作的结果
-     * @throws HttpException 如果插件、控制器或操作不存在,或者插件被禁用,将抛出HTTP异常
+     * 插件路由请求
+     * @param null $addon
+     * @param null $controller
+     * @param null $action
+     * @return mixed
      */
-    public static function execute()
+    public static $addons_path;
+    public static $app;
+    public static function execute($module = 'index', $addon = null, $controller = null, $action = null)
     {
-        // 获取应用程序实例
         $app = app();
-        // 获取当前请求对象
         $request = $app->request;
-        // 从路由中获取插件、控制器和操作的名称
-        $addon = $request->route('addon');
-        $controller = $request->route('controller');
-        $action = $request->route('action');
-        // 触发addons_begin事件,可以在事件处理程序中进行一些全局的初始化操作
+        self::$app = $app;
+        // 注册插件公共中间件
+        if (is_file($app->addons->getAddonsPath() . 'middleware.php')) {
+            $app->middleware->import(include $app->addons->getAddonsPath() . 'middleware.php', 'route');
+        }
+        if (is_file($app->addons->getAddonsPath() . 'provider.php')) {
+            $app->bind(include $app->addons->getAddonsPath() . 'provider.php');
+        }
+        $module_path  = $app->addons->getAddonsPath() . $addon . DIRECTORY_SEPARATOR . $module . DIRECTORY_SEPARATOR;
+        //注册路由配置
+        $addonsRouteConfig = [];
+        if (is_file($module_path . 'config' . DIRECTORY_SEPARATOR . 'route.php')) {
+            $addonsRouteConfig = include($module_path . 'config' . DIRECTORY_SEPARATOR . 'route.php');
+            $app->config->load($module_path . 'config' . DIRECTORY_SEPARATOR . 'route.php', pathinfo($module_path . 'config' . DIRECTORY_SEPARATOR . 'route.php', PATHINFO_FILENAME));
+        }
+        if (isset($addonsRouteConfig['url_route_must']) && $addonsRouteConfig['url_route_must']) {
+            throw new HttpException(400, lang("addon {$addon}：已开启强制路由"));
+        }
+        // 是否自动转换控制器和操作名
+        $convert = $addonsRouteConfig['url_convert'] ?? Config::get('route.url_convert');
+        $filter = $convert ? 'strtolower' : 'trim';
+        $addon = $addon ? trim(call_user_func($filter, $addon)) : '';
+        $controller = $controller ? trim(call_user_func($filter, $controller)) : $app->route->config('default_action');
+        $action = $action ? trim(call_user_func($filter, $action)) : $app->route->config('default_action');
+
         Event::trigger('addons_begin', $request);
-        // 检查插件、控制器和操作的名称是否为空,如果为空,抛出HTTP异常
         if (empty($addon) || empty($controller) || empty($action)) {
             throw new HttpException(500, lang('addon can not be empty'));
         }
-        // 设置请求的插件、控制器和操作属性
+        self::$addons_path = Service::getAddonsNamePath($addon);
         $request->addon = $addon;
         // 设置当前请求的控制器、操作
-        $request->setController($controller)->setAction($action);
-        // 获取插件的信息,如果插件不存在,抛出HTTP异常
+        $request->setController("{$module}.{$controller}")->setAction($action);
+        // 获取插件基础信息
         $info = get_addons_info($addon);
         if (!$info) {
             throw new HttpException(404, lang('addon %s not found', [$addon]));
         }
-        // 检查插件是否被禁用,如果被禁用,抛出HTTP异常
         if (!$info['status']) {
             throw new HttpException(500, lang('addon %s is disabled', [$addon]));
         }
-        // 触发addon_module_init事件,可以在事件处理程序中进行一些插件相关的初始化操作
+        // 监听addon_module_init
         Event::trigger('addon_module_init', $request);
-        // 根据插件和控制器的名称获取插件控制器的类名,如果类名不存在,抛出HTTP异常
-        $class = get_addons_class($addon, 'controller', $controller);
+        $class = get_addons_class($addon, 'controller', $controller, $module);
         if (!$class) {
-            throw new HttpException(404, lang('addon controller %s not found', [Str::studly($controller)]));
+            throw new HttpException(404, lang('addon controller %s not found', [Str::studly($module . DIRECTORY_SEPARATOR . $controller)]));
         }
-        // 设置视图的路径为插件的视图目录
+        //加载app配置
+        self::loadApp($addon, $module);
+        // 重写视图基础路径
         $config = Config::get('view');
-        $config['view_path'] = $app->addons->getAddonsPath() . $addon . DIRECTORY_SEPARATOR . 'view' . DIRECTORY_SEPARATOR;
+        $config['view_path'] = $app->addons->getAddonsPath() . $addon . DIRECTORY_SEPARATOR . $module . DIRECTORY_SEPARATOR . 'view' . DIRECTORY_SEPARATOR;
         Config::set($config, 'view');
-        // 创建插件控制器的实例,如果实例创建失败,抛出HTTP异常
-        try {
-            $instance = new $class($app);
-        } catch (\Exception $e) {
-            throw new HttpException(404, lang('addon controller %s not found', [Str::studly($controller)]));
+        if (is_file(self::$addons_path . 'app.php')) {
+            $addonAppConfig = (require_once(self::$addons_path . 'app.php'));
+            $deny =  !empty($addonAppConfig['deny_app_list']) ? $addonAppConfig['deny_app_list'] : Config::get('app.deny_app_list');
+            if ($module && $deny && in_array($module, $deny)) {
+                throw new HttpException(404, lang('addon app %s is ', []));
+            }
         }
-        // 初始化变量,用于存储传递给操作方法的参数
+        // 生成控制器对象
+        $instance = new $class($app);
         $vars = [];
-        // 检查是否可以调用指定的操作方法,如果可以,记录调用的方法
         if (is_callable([$instance, $action])) {
             // 执行操作方法
             $call = [$instance, $action];
         } elseif (is_callable([$instance, '_empty'])) {
-            // 如果操作方法不存在,但是控制器中定义了_empty方法,记录_empty方法作为调用
+            // 空操作
             $call = [$instance, '_empty'];
             $vars = [$action];
-        } elseif (is_callable([$instance, '__call'])) {
-            // 如果操作方法和_empty方法都不存在,但是控制器中定义了__call方法,记录__call方法作为调用
-            $call = [$instance, '__call'];
-            $vars = [$action];
         } else {
-            // 如果都无法调用,抛出HTTP异常,表示操作方法不存在
+            // 操作不存在
             throw new HttpException(404, lang('addon action %s not found', [get_class($instance) . '->' . $action . '()']));
         }
-        // 触发addons_action_begin事件,可以在事件处理程序中对操作的执行进行干预
         Event::trigger('addons_action_begin', $call);
-        // 调用记录的操作方法,并返回执行结果
+
         return call_user_func_array($call, $vars);
+    }
+
+    /**
+     * 加载配置,路由,语言,中间件等
+     */
+    private static function loadApp($addon = null, $module = null)
+    {
+        $results = scandir(self::$addons_path . $module);
+        foreach ($results as $childname) {
+            if (in_array($childname, ['.', '..', 'public', 'view'])) {
+                continue;
+            }
+            if (is_file(self::$addons_path . 'middleware.php')) {
+                self::$app->middleware->import(include self::$addons_path . 'middleware.php', 'app');
+            }
+            if (is_file(self::$addons_path . 'common.php')) {
+                include_once  self::$addons_path . 'common.php';
+            }
+            if (is_file(self::$addons_path . 'provider.php')) {
+                self::$app->bind(include self::$addons_path . 'provider.php');
+            }
+            //事件
+            if (is_file(self::$addons_path . 'event.php')) {
+                self::$app->loadEvent(include self::$addons_path . 'event.php');
+            }
+            $module_dir = self::$addons_path . $module . DIRECTORY_SEPARATOR . $childname;
+            if (is_dir($module_dir)) {
+                foreach (scandir($module_dir) as $mdir) {
+                    if (in_array($mdir, ['.', '..'])) {
+                        continue;
+                    }
+                    if (is_file(self::$addons_path . $module . DIRECTORY_SEPARATOR . 'middleware.php')) {
+                        self::$app->middleware->import(include self::$addons_path . $module . DIRECTORY_SEPARATOR . 'middleware.php', 'app');
+                    }
+                    if (is_file(self::$addons_path . $module . DIRECTORY_SEPARATOR . 'common.php')) {
+                        include_once  self::$addons_path . $module . DIRECTORY_SEPARATOR . 'common.php';
+                    }
+                    if (is_file(self::$addons_path . $module . DIRECTORY_SEPARATOR . 'provider.php')) {
+                        self::$app->bind(include self::$addons_path . $module . DIRECTORY_SEPARATOR . 'provider.php');
+                    }
+                    //事件
+                    if (is_file(self::$addons_path . $module . DIRECTORY_SEPARATOR . 'event.php')) {
+                        self::$app->loadEvent(include self::$addons_path . $module . DIRECTORY_SEPARATOR . 'event.php');
+                    }
+                    $commands = [];
+                    //配置文件
+                    $addons_config_dir = self::$addons_path . $module . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR;
+                    if (is_dir($addons_config_dir)) {
+                        $files = [];
+                        $files = array_merge($files, glob($addons_config_dir . '*' . self::$app->getConfigExt()));
+                        if ($files) {
+                            foreach ($files as $file) {
+                                if (file_exists($file)) {
+                                    if (substr($file, -11) == 'console.php') {
+                                        $commands_config = include_once $file;
+                                        isset($commands_config['commands']) && $commands = array_merge($commands, $commands_config['commands']);
+                                        !empty($commands) &&
+                                            \think\Console::starting(function (\think\Console $console) {
+                                                $console->addCommands($commands);
+                                            });
+                                    } else {
+                                        self::$app->config->load($file, pathinfo($file, PATHINFO_FILENAME));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    // 语言文件
+                    $addons_lang_dir = self::$addons_path . $childname  . DIRECTORY_SEPARATOR . 'lang' . DIRECTORY_SEPARATOR;
+                    if (is_dir($addons_lang_dir)) {
+                        $files = glob($addons_lang_dir . self::$app->lang->defaultLangSet() . '.php');
+                        foreach ($files as $file) {
+                            if (file_exists($file)) {
+                                Lang::load([$file]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }

@@ -28,74 +28,46 @@ abstract class Addons
 
     /**
      * 插件构造函数
-     * 构建插件实例时调用,初始化插件的相关属性和设置
-     * 
-     * @param \think\App $app ThinkPHP的应用程序实例
+     * Addons constructor.
+     * @param \think\App $app
      */
     public function __construct(App $app)
     {
-        // 注入应用程序实例
         $this->app = $app;
-        // 获取当前请求实例
         $this->request = $app->request;
-        // 自动获取并设置插件名称
         $this->name = $this->getName();
-        // 设置插件路径,用于后续的视图解析和其他文件操作
         $this->addon_path = $app->addons->getAddonsPath() . $this->name . DIRECTORY_SEPARATOR;
-        // 定义插件的配置和信息的存储键名
         $this->addon_config = "addon_{$this->name}_config";
         $this->addon_info = "addon_{$this->name}_info";
-        // 克隆视图引擎实例,用于插件的视图渲染
         $this->view = clone View::engine('Think');
-        // 配置视图路径为插件的视图目录
         $this->view->config([
             'view_path' => $this->addon_path . 'view' . DIRECTORY_SEPARATOR
         ]);
-        // 执行初始化操作,可用于插件的自定义初始化设置
         // 控制器初始化
         $this->initialize();
     }
 
-    /**
-     * 初始化方法
-     * 
-     * 该方法用于在类的其他方法执行前进行必要的初始化操作
-     * 子类可以重写此方法以实现特定的初始化逻辑
-     */
-    protected function initialize()
-    {
-        // 初始化操作可以在这里进行
-    }
+    // 初始化
+    protected function initialize() {}
 
     /**
-     * 获取当前插件的名称
-     * 
-     * 通过解析当前类的全限定名,提取插件名称
-     * 将插件名称设置到请求对象中,以便后续使用
-     * 
-     * @return string 插件的名称
+     * 获取插件标识
+     * @return mixed|null
      */
     final protected function getName()
     {
-        // 获取当前对象的类名
         $class = get_class($this);
-        // 使用explode函数将类名按反斜线分割,然后取第二个元素作为插件名
         [, $name,] = explode('\\', $class);
-        // 将插件名设置到请求对象的addon属性中
         $this->request->addon = $name;
-        // 返回插件名
         return $name;
     }
 
     /**
-     * 加载模板并渲染输出
-     * 本函数主要用于加载指定的模板文件,并将给定的变量渲染到模板中,最终返回渲染后的结果
-     * 如果不指定模板文件名,则默认加载当前控制器对应的视图文件
-     *
-     * @param string $template 模板文件名.可以是相对路径或者绝对路径,如果不指定,则默认使用当前控制器对应的视图文件
-     * @param array $vars 用于渲染模板的变量数组.键值对形式,键为变量名,值为变量值
-     * @return mixed|false|string 返回渲染后的结果.如果渲染失败,可能返回false或者抛出异常
-     * @throws \think\Exception 如果模板文件不存在或者渲染过程中发生错误,则可能抛出异常
+     * 加载模板输出
+     * @param string $template
+     * @param array $vars 模板文件名
+     * @return false|mixed|string 模板输出变量
+     * @throws \think\Exception
      */
     protected function fetch($template = '', $vars = [])
     {
@@ -103,13 +75,10 @@ abstract class Addons
     }
 
     /**
-     * 渲染并输出模板内容
-     * 此方法用于在控制器中调用,以显示视图部分
-     * 它接受一个可选的模板内容字符串和一个变量数组,用于在模板渲染过程中代替预定义的变量
-     * 
-     * @param string $content 可选的模板内容.如果未提供,将使用默认的模板内容
-     * @param array $vars 一个包含模板变量的数组,这些变量将在渲染过程中被替换
-     * @return mixed 返回渲染后的模板内容
+     * 渲染内容输出
+     * @param string $content 模板内容
+     * @param array $vars 模板输出变量
+     * @return mixed
      */
     protected function display($content = '', $vars = [])
     {
@@ -117,11 +86,10 @@ abstract class Addons
     }
 
     /**
-     * 给模板变量赋值
-     * 这个方法允许开发者为模板引擎分配变量,这些变量可以在模板文件中被引用和使用
-     * @param string|array $name 如果是字符串,则表示变量名；如果是数组,则表示多个变量名和值的对应关系
-     * @param mixed $value 变量的值.当$name是字符串时,这个参数表示对应的值；当$name是数组时,这个参数不会被使用
-     * @return $this 返回自身,支持链式调用
+     * 模板变量赋值
+     * @param mixed $name 要显示的模板变量
+     * @param mixed $value 变量的值
+     * @return $this
      */
     protected function assign($name, $value = '')
     {
@@ -131,67 +99,18 @@ abstract class Addons
 
     /**
      * 初始化模板引擎
-     * 该方法用于设置并初始化模板引擎
-     * 支持传入数组或字符串作为引擎参数
-     * @access protected 保护级别访问,意味着只能在类内部或子类中调用
-     * @param array|string $engine 引擎参数,可以是数组或字符串.数组形式提供更丰富的配置信息,字符串则为简单的引擎标识
-     * @return mixed|$this 返回值可以是任意类型,但通常为了支持链式调用,返回$this
+     * @param array|string $engine 引擎参数
+     * @return $this
      */
     protected function engine($engine)
     {
-        // 将引擎配置应用于视图对象,进行模板引擎的初始化
         $this->view->engine($engine);
-        // 支持链式调用,返回对象本身
         return $this;
     }
 
     /**
-     * 插件更新[info]配置文件
-     * 本函数用于更新插件的info.json配置文件
-     * 如果插件目录不存在,则会创建该目录
-     * 参数$name指定插件名称,参数$array为info.json的更新内容
-     * 返回值为文件写入操作的结果,成功返回true,失败返回false
-     *
-     * @param string $name 插件名,用于定位插件的info.json文件
-     * @param array $array 包含插件信息的数组,这些信息将被写入info.json文件
-     * @return mixed|bool 文件写入操作的结果,成功返回true,失败返回false
-     */
-    final public function setInfo($name = '', $array = [])
-    {
-        // 获取插件的根目录
-        $path = $this->addon_path;
-        // 如果指定了插件名,则更新插件路径为指定插件的目录
-        if (!empty($name)) {
-            $path = $this->app->addons->getAddonsPath() . $name . DIRECTORY_SEPARATOR;
-        }
-        // 拼接info.json文件的完整路径
-        $config = $path . 'info.json';
-        // 如果插件目录不存在,则创建该目录
-        if (!is_file($path)) {
-            FileHelper::mkDir($path);
-        }
-        // 将输入的数组直接赋值给$list,此处用于演示,实际操作中可进行更多处理
-        $list = [];
-        foreach ($array as $k => $v) {
-            $list[$k] = $v;
-        }
-        // 将数组内容编码为JSON格式,并写入info.json文件
-        // 使用JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES选项以保持正确的字符编码和格式化输出
-        $result = FileHelper::writeFile($config, json_encode($array, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
-        // 返回文件写入操作的结果
-        return $result;
-    }
-
-    /**
-     * 获取插件的基础信息
-     * 
-     * 本方法用于获取当前插件的配置信息
-     * 首先尝试从配置管理系统中直接获取插件信息
-     * 如果信息不存在,则尝试从插件目录下的info.json文件中读取并解析信息
-     * 解析成功后,会合并从配置系统中获取的信息(如果存在)和info.json中的信息,并保存回配置系统
-     * 最后返回合并后的插件信息
-     * 
-     * @return mixed|array 返回插件的信息数组.如果无法获取信息,则返回空数组
+     * 插件基础信息
+     * @return array
      */
     final public function getInfo()
     {
@@ -287,26 +206,9 @@ abstract class Addons
         return $config;
     }
 
-    /**
-     * 安装方法
-     * 该方法是一个抽象方法,没有具体的实现
-     * 它的目的是为了要求所有继承自这个类的子类必须提供一个安装的实现方法
-     * 具体的安装步骤和逻辑应该在子类的install方法中实现
-     * 
-     * @abstract
-     * @return void 没有返回值,因为安装操作通常是副作用的表现,例如创建文件、设置配置等
-     */
+    //必须实现安装
     abstract public function install();
 
-    /**
-     * 抽象方法,用于卸载插件
-     * 
-     * 该方法是所有插件类必须实现的抽象方法之一,旨在提供一个统一的插件卸载接口
-     * 当调用此方法时,插件应该执行必要的操作以确保自身被安全地从系统中卸载
-     * 这可能包括清理数据库、删除文件、取消注册事件监听器等操作
-     * 
-     * @abstract
-     * @access public
-     */
+    //必须卸载插件方法
     abstract public function uninstall();
 }

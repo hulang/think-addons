@@ -1,13 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace think\addons\command;
 
 use think\console\Command;
 use think\console\Input;
-use think\console\input\Argument;
-use think\console\input\Option;
 use think\console\Output;
-use think\facade\Env;
 
 class SendConfig extends Command
 {
@@ -15,7 +14,7 @@ class SendConfig extends Command
     public function configure()
     {
         $this->setName('addons:config')
-             ->setDescription('send config to config folder');
+            ->setDescription('send config to config folder');
     }
 
     public function execute(Input $input, Output $output)
@@ -25,7 +24,6 @@ class SendConfig extends Command
 
         $configPath = config_path() . '/';
         $configFile = $configPath . 'addons.php';
-
 
         //判断目录是否存在
         if (!file_exists($configPath)) {
@@ -38,10 +36,9 @@ class SendConfig extends Command
         }
 
         if (false === file_put_contents($configFile, $content)) {
-            throw new \RuntimeException(sprintf('The config file "%s" could not be written to "%s"', $configFile,$configPath));
+            throw new \RuntimeException(sprintf('The config file "%s" could not be written to "%s"', $configFile, $configPath));
         }
 
         $output->writeln('create addons config ok');
     }
-
 }

@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 use think\facade\Event;
 use think\facade\Route;
-use think\facade\App;
 use think\helper\Str;
 
 // 插件类库自动载入
 spl_autoload_register(function ($class) {
+    // 获取类名
     $class = ltrim($class, '\\');
-    $dir = App::getRootPath();
+    // 获取根目录
+    $root_path = str_replace('\\', '/', dirname(__DIR__));
+    $dir = strstr($root_path, 'vendor', true);
+    // 获取命名空间
     $namespace = 'addons';
     if (strpos($class, $namespace) === 0) {
         $class = substr($class, strlen($namespace));

@@ -38,8 +38,14 @@ class Service extends \think\Service
         $this->autoload();
         // 加载插件的事件处理,使得插件可以参与到应用的生命周期中
         $this->loadEvent();
+        // 加载自定义路由
+        $this->loadRoutes();
         // 加载插件的服务,提供给应用和其他插件使用
         $this->loadService();
+        // 加载插件命令
+        $this->loadCommand();
+        // 加载配置
+        $this->loadConfig();
         // 将插件服务绑定到应用容器,方便随时获取和使用
         $this->app->bind('addons', Service::class);
     }
@@ -250,6 +256,97 @@ class Service extends \think\Service
         }
         // 更新配置,保存注册的插件钩子
         Config::set($config, 'addons');
+    }
+
+    /**
+     * 自定义路由文件
+     */
+    private function loadRoutes()
+    {
+        // 配置
+        $addons_dir = scandir($this->addons_path);
+        foreach ($addons_dir as $name) {
+            if (in_array($name, ['.', '..'])) {
+                continue;
+            }
+            if (!is_dir($this->addons_path . $name)) {
+                continue;
+            }
+            $module_dir = $this->addons_path . $name .  DIRECTORY_SEPARATOR;
+            // 路由配置文件
+            $addons_route_dir = $module_dir . 'route' .  DIRECTORY_SEPARATOR;
+            if (file_exists($addons_route_dir) && is_dir($addons_route_dir)) {
+                $files = glob($addons_route_dir . '*.php');
+                foreach ($files as $file) {
+                    if (file_exists($file)) {
+                        $this->loadRoutesFrom($file);;
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * 加载插件配置文件
+     */
+    private function loadConfig()
+    {
+        $results = scandir($this->addons_path);
+        foreach ($results as $name) {
+            if (in_array($name, ['.', '..'])) {
+                continue;
+            }
+            if (!is_dir($this->addons_path . $name)) {
+                continue;
+            }
+            foreach (scandir($this->addons_path . $name) as $childname) {
+                if (in_array($childname, ['.', '..', 'public', 'view'])) {
+                    continue;
+                }
+                $commands = [];
+                // 配置文件
+                $addons_config_dir = $this->addons_path . $name . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR;
+                if (is_dir($addons_config_dir)) {
+                    $files = glob($addons_config_dir . '*.php');
+                    foreach ($files as $file) {
+                        if (file_exists($file)) {
+                            if (substr($file, -11) == 'console.php') {
+                                $commands_config = include_once $file;
+                                isset($commands_config['commands']) && $commands = array_merge($commands, $commands_config['commands']);
+                                !empty($commands) && $this->commands($commands);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * 加载插件命令
+     */
+    private function loadCommand()
+    {
+        $results = scandir($this->addons_path);
+        foreach ($results as $name) {
+            if ($name === '.' or $name === '..') {
+                continue;
+            }
+            if (is_file($this->addons_path . $name)) {
+                continue;
+            }
+            $addonDir = $this->addons_path . $name . DIRECTORY_SEPARATOR;
+            if (!is_dir($addonDir)) {
+                continue;
+            }
+            $command_file = $addonDir . 'command.php';
+            if (is_file($command_file)) {
+                $commands = include_once $command_file;
+                if (is_array($commands)) {
+                    $this->commands($commands);
+                }
+            }
+        }
     }
 
     /**

@@ -10,7 +10,6 @@ use think\console\Output;
 
 class SendConfig extends Command
 {
-
     public function configure()
     {
         $this->setName('addons:config')

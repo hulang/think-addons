@@ -49,7 +49,7 @@ abstract class Addons
         $this->view = clone View::engine('Think');
         // 配置视图路径为插件的视图目录
         $this->view->config([
-            'view_path' => $this->addon_path . 'view' . DIRECTORY_SEPARATOR
+            'view_path' => (php_uname('s') == 'Linux') ? $this->addon_path . 'view' . DIRECTORY_SEPARATOR : $this->addon_path . 'view'
         ]);
         // 执行初始化操作,可用于插件的自定义初始化设置
         // 控制器初始化
@@ -125,7 +125,11 @@ abstract class Addons
      */
     protected function assign($name, $value = '')
     {
-        $this->view->assign([$name => $value]);
+        if (is_array($name)) {
+            $this->view->assign($name);
+        } else {
+            $this->view->assign([$name => $value]);
+        }
         return $this;
     }
 
@@ -133,7 +137,6 @@ abstract class Addons
      * 初始化模板引擎
      * 该方法用于设置并初始化模板引擎
      * 支持传入数组或字符串作为引擎参数
-     * @access protected 保护级别访问,意味着只能在类内部或子类中调用
      * @param array|string $engine 引擎参数,可以是数组或字符串.数组形式提供更丰富的配置信息,字符串则为简单的引擎标识
      * @return mixed|$this 返回值可以是任意类型,但通常为了支持链式调用,返回$this
      */

@@ -49,7 +49,7 @@ abstract class Addons
         $this->view = clone View::engine('Think');
         // 配置视图路径为插件的视图目录
         $this->view->config([
-            'view_path' => (php_uname('s') == 'Linux') ? $this->addon_path . 'view' . DIRECTORY_SEPARATOR : $this->addon_path . 'view'
+            'view_path' => $this->addon_path . 'view' . DIRECTORY_SEPARATOR
         ]);
         // 执行初始化操作,可用于插件的自定义初始化设置
         // 控制器初始化

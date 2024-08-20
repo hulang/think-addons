@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 use think\facade\Event;
 use think\facade\Route;
+use think\facade\Cache;
 use think\helper\Str;
+
+define('DS', DIRECTORY_SEPARATOR);
 
 // 插件类库自动载入
 spl_autoload_register(function ($class) {
@@ -278,5 +281,44 @@ if (!function_exists('addons_url')) {
         }
         /* 使用解析出的插件、控制器和操作,以及参数数组,构建URL,并根据需要设置后缀和域名 */
         return Route::buildUrl("@addons/{$addons}/{$controller}/{$action}", $param)->suffix($suffix)->domain($domain);
+    }
+}
+
+if (!function_exists('get_addons_list')) {
+    /**
+     * 获得插件列表
+     * @return mixed|array
+     */
+    function get_addons_list()
+    {
+        $list = Cache::get('addons_list');
+        if (empty($list)) {
+            // 插件目录
+            $addonsPath = app()->getRootPath() . 'addons' . DS;
+            $results = scandir($addonsPath);
+            $list = [];
+            foreach ($results as $name) {
+                if ($name === '.' or $name === '..') {
+                    continue;
+                }
+                if (is_file($addonsPath . $name)) {
+                    continue;
+                }
+                $addonDir = $addonsPath . $name . DS;
+                if (!is_dir($addonDir)) {
+                    continue;
+                }
+                if (!is_file($addonDir . 'Plugin' . '.php')) {
+                    continue;
+                }
+                $info = get_addons_info($name);
+                if (!isset($info['name'])) {
+                    continue;
+                }
+                $list[$name] = $info;
+            }
+            Cache::set('addons_list', $list);
+        }
+        return $list;
     }
 }

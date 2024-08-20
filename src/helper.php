@@ -6,6 +6,7 @@ use think\facade\Event;
 use think\facade\Route;
 use think\facade\Cache;
 use think\helper\Str;
+use hulang\tool\FileHelper;
 
 define('DS', DIRECTORY_SEPARATOR);
 
@@ -296,29 +297,24 @@ if (!function_exists('get_addons_list')) {
         if (empty($list)) {
             // 插件目录
             $addonsPath = app()->getRootPath() . 'addons' . DS;
-            $results = scandir($addonsPath);
+            $results = FileHelper::getFolder($addonsPath);
             $list = [];
-            foreach ($results as $name) {
-                if ($name === '.' or $name === '..') {
-                    continue;
+            foreach ($results as $k => $v) {
+                if ($v['type'] == 'dir') {
+                    $pluginName = join(DS, [$v['path_name'], 'Plugin.php']);
+                    if (!is_file($pluginName)) {
+                        continue;
+                    }
+                    $info = get_addons_info($v['name']);
+                    if (!isset($info['name'])) {
+                        continue;
+                    }
+                    $list[$v['name']] = $info;
                 }
-                if (is_file($addonsPath . $name)) {
-                    continue;
-                }
-                $addonDir = $addonsPath . $name . DS;
-                if (!is_dir($addonDir)) {
-                    continue;
-                }
-                if (!is_file($addonDir . 'Plugin' . '.php')) {
-                    continue;
-                }
-                $info = get_addons_info($name);
-                if (!isset($info['name'])) {
-                    continue;
-                }
-                $list[$name] = $info;
             }
-            Cache::set('addons_list', $list);
+            Cache::set('addons_list', json_encode($list));
+        } else {
+            $list = json_decode($list, true);
         }
         return $list;
     }

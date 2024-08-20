@@ -4,110 +4,130 @@ declare(strict_types=1);
 
 namespace think\addons;
 
-use app\BaseController;
 use think\App;
+use think\helper\Str;
 use think\facade\Lang;
-use think\facade\View;
 use think\facade\Config;
+use think\facade\View;
 
-/**
- * 插件基类控制器.
- */
-class Controller extends BaseController
+class Controller
 {
-    // 当前插件操作
-    protected $addon = null;
-    //插件路径
-    protected $addon_path = null;
-    protected $controller = null;
-    protected $action = null;
-    protected $module = null;
-    protected $param;
+    /**
+     * @var Model
+     */
+    protected $model = null;
 
     /**
-     * 无需登录的方法,同时也就不需要鉴权了.
-     *
-     * @var array
+     * 无需登录及鉴权的方法
+     * @var mixed|array
      */
-    protected $noNeedLogin = ['*'];
+    protected $noNeedLogin = [];
 
     /**
-     * 无需鉴权的方法,但需要登录.
-     *
-     * @var array
+     * 需要登录无需鉴权的方法
+     * @var mixed|array
      */
-    protected $noNeedRight = ['*'];
+    protected $noNeedAuth = [];
 
+    // app 容器
+    protected $app;
+    // 请求对象
+    protected $request;
+    // 当前插件标识
+    protected $name;
+    // 插件路径
+    protected $addon_path;
+    // 视图模型
+    protected $view;
+    // 插件配置
+    protected $addon_config = '';
+    // 插件信息
+    protected $addon_info = '';
 
     /**
-     * 布局模板
-     *
-     * @var string
+     * 插件构造函数
+     * Addons constructor.
+     * @param \think\App $app
      */
-    protected $layout = 'layout/default';
-
-    /**
-     * 架构函数.
-     */
-    public function __construct(App $app)
+    public function __construct(App $app = null)
     {
-        $this->request = app()->request;
-        // 是否自动转换控制器和操作名
-        $convert = Config::get('url_convert');
-        $filter = $convert ? 'strtolower' : 'trim';
-        // 处理路由参数
-        $this->param = $param = app()->request->param();
-        $route = app()->request->rule()->getName();
-        if (empty($param) || !isset($param['addon'])) {
-            $route = explode('@', $route);
-            $param['action'] = $route[1];
-            [
-                $param['addons'],
-                $param['addon'],
-                $param['module'],
-                $param['controllers'],
-                $param['controller'],
-            ] = explode('\\', $route[0]);
-            $param['controller'] = $param['controller'] . (isset(explode('\\', $route[0])[5]) ? DIRECTORY_SEPARATOR . explode('\\', $route[0])[5] : '');
-        }
-        $addon = isset($param['addon']) ? $param['addon'] : '';
-        $module = isset($param['module']) ? $param['module'] : 'index';
-        $controller = isset($param['controller']) ? $param['controller'] : app()->request->controller();
-        $action = isset($param['action']) ? $param['action'] : app()->request->action();
-        $this->addon = $addon ? call_user_func($filter, $addon) : '';
-        $this->module = $module ? call_user_func($filter, $module) : '';
-        $this->addon_path = $app->addons->getAddonsPath() . $this->addon . DIRECTORY_SEPARATOR;
-        $this->controller = $controller ? call_user_func($filter, $controller) : 'index';
-        $this->action = $action ? call_user_func($filter, $action) : 'index';
-        // 父类的调用必须放在设置模板路径之后
-        $this->_initialize();
-        parent::__construct($app);
+        $this->app = $app;
+        $this->request = $app->request;
+        $this->name = $this->getName();
+        $this->addon_path = $app->addons->getAddonsPath() . $this->name . DIRECTORY_SEPARATOR;
+        $this->addon_config = "addon_{$this->name}_config";
+        $this->addon_info = "addon_{$this->name}_info";
+        $this->view = View::engine('Think');
+        $this->view->config([
+            'view_path' => $this->addon_path . 'view' . DIRECTORY_SEPARATOR
+        ]);
+
+        // 控制器初始化
+        $this->initialize();
     }
 
-    protected function _initialize()
-    {
-        $view_config = Config::get('view');
-        // 渲染配置到视图中
-        if (isset($this->param['addon'])) {
-            $view_config = array_merge($view_config, ['view_path' => $this->addon_path . 'view' . DIRECTORY_SEPARATOR],);
-            View::engine('Think')->config($view_config);
-        } else {
-            $view_config = array_merge($view_config, ['view_path' => $this->addon_path . 'view' . DIRECTORY_SEPARATOR . $this->module . DIRECTORY_SEPARATOR . str_replace('.', '/', $this->controller) . DIRECTORY_SEPARATOR]);
-            View::engine('Think')->config($view_config);
-        }
-        // 如果有使用模板布局 可以更换布局
-        if ($this->layout == 'layout/default') {
-            $this->layout && app()->view->engine()->layout($this->module . DIRECTORY_SEPARATOR . trim($this->layout, '/'));
-        } else {
-            $this->layout && app()->view->engine()->layout(trim($this->layout, '/'));
-        }
+    // 初始化
+    protected function initialize() {}
 
-        $addon_config = get_addons_config($this->addon);
-        View::assign(['addon_config' => $addon_config]);
-        // 加载系统语言包
-        Lang::load([
-            $this->addon_path . 'lang' . DIRECTORY_SEPARATOR . Lang::getLangset() . '.php',
-        ]);
-        parent::initialize();
+    /**
+     * 获取插件标识
+     * @return mixed|null
+     */
+    final protected function getName()
+    {
+        $class = get_class($this);
+        [, $name,] = explode('\\', $class);
+        $this->request->addon = $name;
+        return $name;
+    }
+
+    /**
+     * 加载模板输出
+     * @param string $template
+     * @param array $vars 模板文件名
+     * @return false|mixed|string 模板输出变量
+     * @throws \think\Exception
+     */
+    protected function fetch($template = '', $vars = [])
+    {
+        return $this->view->fetch($template, $vars);
+    }
+
+    /**
+     * 渲染内容输出
+     * @param string $content 模板内容
+     * @param array $vars 模板输出变量
+     * @return mixed
+     */
+    protected function display($content = '', $vars = [])
+    {
+        return $this->view->display($content, $vars);
+    }
+
+    /**
+     * 模板变量赋值
+     * @param mixed $name 要显示的模板变量
+     * @param mixed $value 变量的值
+     * @return $this
+     */
+    protected function assign($name, $value = '')
+    {
+        if (is_array($name)) {
+            $this->view->assign($name);
+        } else {
+            $this->view->assign([$name => $value]);
+        }
+        return $this;
+    }
+
+    /**
+     * 初始化模板引擎
+     * @param array|string $engine 引擎参数
+     * @return $this
+     */
+    protected function engine($engine)
+    {
+        $this->view->engine($engine);
+        return $this;
     }
 }

@@ -121,13 +121,13 @@ if (!function_exists('get_addons_config')) {
      */
     function get_addons_config($name, $type = false)
     {
-        // 获取指定插件的实例.
+        // 获取指定插件的实例
         $addon = get_addons_instance($name);
-        // 检查插件实例是否获取成功.
+        // 检查插件实例是否获取成功
         if (!$addon) {
             return [];
         }
-        // 通过插件实例获取配置信息,根据$type的值决定获取默认配置还是完整配置.
+        // 通过插件实例获取配置信息,根据$type的值决定获取默认配置还是完整配置
         return $addon->getConfig($type);
     }
 }
@@ -135,7 +135,8 @@ if (!function_exists('get_addons_config')) {
 if (!function_exists('set_addons_config')) {
     /**
      * 设置插件的配置信息
-     * 本函数用于更新指定插件的配置文件.如果插件存在,则将新配置信息写入插件的配置文件中
+     * 本函数用于更新指定插件的配置文件
+     * 如果插件存在,则将新配置信息写入插件的配置文件中
      * @param string $name 插件名称.如果未指定名称,则默认为空字符串
      * @param array $array 新的配置信息数组.如果未指定配置数组,则默认为空数组
      * @return mixed|bool 如果插件不存在,则返回空数组.如果插件存在且配置更新成功,则返回true.否则,返回false

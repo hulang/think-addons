@@ -31,9 +31,7 @@ class Service extends \think\Service
         // 设置插件路径,用于后续插件的查找和加载
         $this->addons_path = $this->getAddonsPath();
         // 加载插件的语言包,支持多语言环境
-        Lang::load([
-            $this->app->getRootPath() . '/vendor/hulang/think-addons/src/lang/zh-cn.php'
-        ]);
+        $this->loadLang();
         // 自动加载插件的类文件,提高插件的使用便捷性
         $this->autoload();
         // 加载插件的事件处理,使得插件可以参与到应用的生命周期中
@@ -48,6 +46,16 @@ class Service extends \think\Service
         $this->loadConfig();
         // 将插件服务绑定到应用容器,方便随时获取和使用
         $this->app->bind('addons', Service::class);
+    }
+
+    /**
+     * 加载语言包
+     */
+    private function loadLang()
+    {
+        Lang::load([
+            $this->app->getRootPath() . '/vendor/hulang/think-addons/src/lang/zh-cn.php',
+        ]);
     }
 
     /**
@@ -104,7 +112,7 @@ class Service extends \think\Service
                 } else {
                     // 处理不包含域名的路由配置
                     // 解析路由规则并构建规则数组
-                    list($addon, $controller, $action) = explode('/', $val);
+                    [$addon, $controller, $action] = explode('/', $val);
                     $route->rule($key, $execute)
                         ->name($key)
                         ->completeMatch(true)

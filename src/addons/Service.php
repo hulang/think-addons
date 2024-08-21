@@ -174,48 +174,32 @@ class Service extends \think\Service
     /**
      * 挂载插件服务
      * 本函数负责加载插件目录中的服务定义,并将它们绑定到应用程序中
-     * 它通过扫描插件目录,查找每个插件的服务配置文件(service.ini)
+     * 它通过扫描插件目录,查找每个插件的服务配置文件(service.json)
      * 然后解析这些配置文件,将插件的服务与相应的类绑定
      * 这样,应用程序在需要使用这些服务时,可以方便地通过依赖注入来获取
      */
     private function loadService()
     {
-        // 获取插件目录中的所有文件和目录
-        $results = scandir($this->addons_path);
         $bind = [];
-        // 遍历每个文件或目录
-        foreach ($results as $name) {
-            // 忽略当前目录和父目录符号链接
-            if ($name === '.' or $name === '..') {
-                continue;
+        // 配置
+        $results = FileHelper::getFolder($this->addons_path);
+        if (!empty($results)) {
+            foreach ($results as $k => $v) {
+                if ($v['type'] == 'dir') {
+                    $service_file = join(DIRECTORY_SEPARATOR, [$v['path_name'], 'service.json']);
+                    if (is_file($service_file)) {
+                        $j = json_decode($service_file, true);
+                        // 将当前插件的绑定信息合并到总的绑定数组中
+                        $bind = array_merge($bind, $j);
+                    }
+                    unset($service_file);
+                }
             }
-            // 如果是文件,则跳过,只处理目录
-            if (is_file($this->addons_path . $name)) {
-                continue;
-            }
-            // 构建插件目录路径
-            $addonDir = $this->addons_path . $name . DIRECTORY_SEPARATOR;
-            // 如果不是目录,则跳过
-            if (!is_dir($addonDir)) {
-                continue;
-            }
-            // 检查插件的主类文件是否存在
-            if (!is_file($addonDir . ucfirst($name) . '.php')) {
-                continue;
-            }
-            // 插件的服务配置文件路径
-            $service_file = $addonDir . 'service.ini';
-            // 如果服务配置文件不存在,则跳过
-            if (!is_file($service_file)) {
-                continue;
-            }
-            // 解析插件的服务配置文件,获取服务与类的绑定信息
-            $info = parse_ini_file($service_file, true, INI_SCANNER_TYPED) ?: [];
-            // 将当前插件的绑定信息合并到总的绑定数组中
-            $bind = array_merge($bind, $info);
         }
-        // 将所有插件的绑定信息注册到应用程序中
-        $this->app->bind($bind);
+        if (!empty($bind)) {
+            // 将所有插件的绑定信息注册到应用程序中
+            $this->app->bind($bind);
+        }
     }
 
     /**
@@ -272,23 +256,15 @@ class Service extends \think\Service
     private function loadRoutes()
     {
         // 配置
-        $addons_dir = scandir($this->addons_path);
-        foreach ($addons_dir as $name) {
-            if (in_array($name, ['.', '..'])) {
-                continue;
-            }
-            if (!is_dir($this->addons_path . $name)) {
-                continue;
-            }
-            $module_dir = $this->addons_path . $name .  DIRECTORY_SEPARATOR;
-            // 路由配置文件
-            $addons_route_dir = $module_dir . 'route' .  DIRECTORY_SEPARATOR;
-            if (file_exists($addons_route_dir) && is_dir($addons_route_dir)) {
-                $files = glob($addons_route_dir . '*.php');
-                foreach ($files as $file) {
-                    if (file_exists($file)) {
-                        $this->loadRoutesFrom($file);;
+        $addons_dir = FileHelper::getFolder($this->addons_path);
+        if (!empty($addons_dir)) {
+            foreach ($addons_dir as $k => $v) {
+                if ($v['type'] == 'dir') {
+                    $route_file = join(DIRECTORY_SEPARATOR, [$v['path_name'], 'route.php']);
+                    if (is_file($route_file)) {
+                        $this->loadRoutesFrom($route_file);;
                     }
+                    unset($route_file);
                 }
             }
         }
@@ -299,32 +275,25 @@ class Service extends \think\Service
      */
     private function loadConfig()
     {
-        $results = scandir($this->addons_path);
-        foreach ($results as $name) {
-            if (in_array($name, ['.', '..'])) {
-                continue;
-            }
-            if (!is_dir($this->addons_path . $name)) {
-                continue;
-            }
-            foreach (scandir($this->addons_path . $name) as $childname) {
-                if (in_array($childname, ['.', '..', 'public', 'view'])) {
-                    continue;
-                }
-                $commands = [];
-                // 配置文件
-                $addons_config_dir = $this->addons_path . $name . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR;
-                if (is_dir($addons_config_dir)) {
-                    $files = glob($addons_config_dir . '*.php');
-                    foreach ($files as $file) {
-                        if (file_exists($file)) {
-                            if (substr($file, -11) == 'console.php') {
-                                $commands_config = include_once $file;
-                                isset($commands_config['commands']) && $commands = array_merge($commands, $commands_config['commands']);
-                                !empty($commands) && $this->commands($commands);
-                            }
+        // 配置
+        $addons_dir = FileHelper::getFolder($this->addons_path);
+        if (!empty($addons_dir)) {
+            foreach ($addons_dir as $k => $v) {
+                if ($v['type'] == 'dir') {
+                    $console_file = join(DIRECTORY_SEPARATOR, [$v['path_name'], 'console.php']);
+                    if (is_file($console_file)) {
+                        $commands_config = include_once $console_file;
+                        $commands = [];
+                        if (isset($commands_config['commands'])) {
+                            $commands = array_merge($commands, $commands_config['commands']);
                         }
+                        if (!empty($commands)) {
+                            $this->commands($commands);
+                        }
+                        unset($commands_config);
+                        unset($commands);
                     }
+                    unset($console_file);
                 }
             }
         }
@@ -335,23 +304,19 @@ class Service extends \think\Service
      */
     private function loadCommand()
     {
-        $results = scandir($this->addons_path);
-        foreach ($results as $name) {
-            if ($name === '.' or $name === '..') {
-                continue;
-            }
-            if (is_file($this->addons_path . $name)) {
-                continue;
-            }
-            $addonDir = $this->addons_path . $name . DIRECTORY_SEPARATOR;
-            if (!is_dir($addonDir)) {
-                continue;
-            }
-            $command_file = $addonDir . 'command.php';
-            if (is_file($command_file)) {
-                $commands = include_once $command_file;
-                if (is_array($commands)) {
-                    $this->commands($commands);
+        // 配置
+        $addons_dir = FileHelper::getFolder($this->addons_path);
+        if (!empty($addons_dir)) {
+            foreach ($addons_dir as $k => $v) {
+                if ($v['type'] == 'dir') {
+                    $command_file = join(DIRECTORY_SEPARATOR, [$v['path_name'], 'command.php']);
+                    if (is_file($command_file)) {
+                        $commandArr = include_once $command_file;
+                        if (is_array($commandArr)) {
+                            $this->commands($commandArr);
+                        }
+                    }
+                    unset($command_file);
                 }
             }
         }

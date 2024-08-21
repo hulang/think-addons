@@ -1,20 +1,21 @@
-## ThinkPHP 8.0.0 插件包
+## ThinkPHP 8.0.0+ Addons Package
 
-### 环境
+#### 环境
 
 - php >=8.0.0
 - ThinkPHP ^8.0.0
 
-## 安装
+### 安装
 ```php
 composer require hulang/think-addons
 ```
 
-## 配置
+### 配置
 
-系统安装后会自动在 `config` 目录中生成 `addons.php` 的配置文件，
+系统安装后会自动在 `config` 目录中生成 `addons.php` 的配置文件
 
-### 公共配置
+#### 公共配置
+
 ```php
 'addons' => [
     // 是否自动读取取插件钩子配置信息（默认是开启）
@@ -29,7 +30,9 @@ composer require hulang/think-addons
     'service' => [],
 ];
 ```
-或者在\config目录中新建`addons.php`,内容为：
+
+或者在 `config` 目录中新建`addons.php`,内容为:
+
 ```php
 <?php
 return [
@@ -46,20 +49,21 @@ return [
 ];
 ```
 
-## 创建插件
+#### 创建插件
 > 创建的插件可以在view视图中使用，也可以在php业务中使用
- 
-安装完成后访问系统时会在项目根目录生成名为`addons`的目录，在该目录中创建需要的插件。
+
+安装完成后访问系统时会在项目根目录生成名为`addons`的目录,在该目录中创建需要的插件.
 
 下面写一个例子：
 
-### 创建test插件
-> 在addons目录中创建test目录
+#### 创建 `test` 插件
+> 在`addons`目录中创建`test`目录
 
-### 创建钩子实现类
-> 在test目录中创建 Plugin.php 类文件。注意：类文件首字母需大写
+#### 创建 `钩子` 实现类
+> 在`test`目录中创建 `Plugin.php` 类文件.注意:类文件首字母需大写
 
-### 插件`info.json`文件基础信息
+### 插件 `info.json` 文件基础信息
+
 ```shell
 {
     "name": "test",
@@ -74,6 +78,8 @@ return [
     "version": "1.0.0"
 }
 ```
+
+### 插件`Plugin.php`文件基础信息
 
 ```php
 <?php
@@ -122,7 +128,8 @@ class Plugin extends Addons	// 需继承think\Addons类
 }
 ```
 
-### 创建插件配置文件
+#### 创建插件配置文件
+
 > 在test目录中创建`config.json`配置文件，插件配置文件可以省略。
 
 ```js
@@ -139,7 +146,7 @@ class Plugin extends Addons	// 需继承think\Addons类
 }
 ```
 
-### 创建钩子模板文件
+#### 创建钩子`模板`文件
 > 在test->view目录中创建info.html模板文件，钩子在使用fetch方法时对应的模板文件。
 
 ```html
@@ -155,7 +162,7 @@ class Plugin extends Addons	// 需继承think\Addons类
 test为插件名，Action为controller中的类名[多级控制器可以用.分割]，link为controller中的方法
 ```
 
-### 创建插件的controller文件
+#### 创建插件的`controller`文件
 > 在test目录中创建controller目录，在controller目录中创建Index.php文件
 > controller类的用法与tp6中的controller一致
 
@@ -172,24 +179,24 @@ class Index
 }
 ```
 
-## 使用钩子
+### 使用钩子
 > 创建好插件后就可以在正常业务中使用该插件中的钩子了
 > 使用钩子的时候第二个参数可以省略
 
-### 模板中使用钩子
+#### 模板中使用钩子
 
 ```html
 <div>{:hook('testhook', ['id'=>1])}</div>
 ```
 
-### php业务中使用
+#### php业务中使用
 > 只要是thinkphp6正常流程中的任意位置均可以使用
 
 ```php
 hook('testhook', ['id'=>1])
 ```
 
-### 插件公共方法
+#### 插件公共方法
 ```php
 /**
  * 处理插件钩子
@@ -234,8 +241,8 @@ function addons_url($url = '', $param = [], $suffix = true, $domain = false);
 
 ```
 
-## 插件目录结构
-### 最终生成的目录结构为
+### 插件目录结构
+#### 最终生成的目录结构为
 
 ```html
 www  WEB部署目录（或者子目录）

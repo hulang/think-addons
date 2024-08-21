@@ -12,9 +12,7 @@ composer require hulang/think-addons
 
 ## 配置
 
-### 生成配置
-
-系统安装后会自动在 config 目录中生成 addons.php 的配置文件，
+系统安装后会自动在 `config` 目录中生成 `addons.php` 的配置文件，
 
 ### 公共配置
 ```php
@@ -23,10 +21,10 @@ composer require hulang/think-addons
     'autoload' => true,
     // 当关闭自动获取配置时需要手动配置hooks信息
     'hooks' => [
-	    // 可以定义多个钩子
-        'testhook'=>'test' // 键为钩子名称，用于在业务中自定义钩子处理，值为实现该钩子的插件，
+        // 可以定义多个钩子
+        'testhook' => 'test', // 键为钩子名称，用于在业务中自定义钩子处理，值为实现该钩子的插件，
         // 多个插件可以用数组也可以用逗号分割
-	],
+    ],
     'route' => [],
     'service' => [],
 ];
@@ -85,7 +83,7 @@ use think\Addons;
 
 /**
  * 插件测试
- * @author byron sampson
+ * @author hulangfy@163.com
  */
 class Plugin extends Addons	// 需继承think\Addons类
 {
@@ -241,7 +239,7 @@ function addons_url($url = '', $param = [], $suffix = true, $domain = false);
 
 ```html
 www  WEB部署目录（或者子目录）
-├─addons           插件目录
+├─addons        插件目录
 ├─app           应用目录
 │  ├─controller      控制器目录
 │  ├─model           模型目录
@@ -250,7 +248,7 @@ www  WEB部署目录（或者子目录）
 │  ├─common.php         公共函数文件
 │  └─event.php          事件定义文件
 │
-├─config                配置目录
+├─config        配置目录
 │  ├─addons.php         插件配置
 │  ├─app.php            应用配置
 │  ├─cache.php          缓存配置
@@ -266,22 +264,21 @@ www  WEB部署目录（或者子目录）
 │  ├─trace.php          Trace配置
 │  └─view.php           视图配置
 │
-├─view            视图目录
+├─view           视图目录
 ├─route                 路由定义目录
 │  ├─route.php          路由定义文件
 │  └─ ...   
 │
-├─public                WEB目录（对外访问目录）
+├─public        WEB目录(对外访问目录)
 │  ├─index.php          入口文件
 │  ├─router.php         快速测试文件
 │  └─.htaccess          用于apache的重写
 │
 ├─extend                扩展类库目录
-├─runtime               应用的运行时目录（可写，可定制）
+├─runtime               应用的运行时目录(可写,可定制)
 ├─vendor                Composer类库目录
 ├─.example.env          环境变量示例文件
 ├─composer.json         composer 定义文件
-├─LICENSE.txt           授权说明文件
 ├─README.md             README 文件
 ├─think                 命令行入口文件
 ```

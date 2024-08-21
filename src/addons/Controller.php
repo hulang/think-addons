@@ -13,7 +13,7 @@ use think\facade\View;
 class Controller
 {
     /**
-     * @var Model
+     * @var mixed|Model
      */
     protected $model = null;
 
@@ -61,13 +61,14 @@ class Controller
         $this->view->config([
             'view_path' => $this->addon_path . 'view' . DIRECTORY_SEPARATOR
         ]);
-
         // 控制器初始化
         $this->initialize();
     }
 
     // 初始化
-    protected function initialize() {}
+    protected function initialize() {
+        // 初始化操作可以在这里进行
+    }
 
     /**
      * 获取插件标识
@@ -76,7 +77,7 @@ class Controller
     final protected function getName()
     {
         $class = get_class($this);
-        [, $name,] = explode('\\', $class);
+        [, $name, ] = explode('\\', $class);
         $this->request->addon = $name;
         return $name;
     }

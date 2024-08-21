@@ -221,6 +221,10 @@ if (!function_exists('get_addons_class')) {
                 // 如果$type为'controller',则生成控制器的命名空间
             case 'controller':
                 $namespace = '\\addons\\' . $name . '\\controller\\' . $class;
+                // 匹配空控制器
+                if (!class_exists($namespace)) {
+                    $namespace = '\\addons\\' . $name . '\\Controller\\' . config('route.empty_controller');
+                }
                 break;
                 // 默认情况下,生成插件基类的命名空间
             default:

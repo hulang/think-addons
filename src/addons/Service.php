@@ -222,9 +222,9 @@ class Service extends \think\Service
                 // 获取插件类的所有方法
                 $methods = (array)get_class_methods("\\addons\\" . $name . "\\" . $info['filename']);
                 // 通过比较基线方法,找出插件特有的方法,即钩子方法
-                $hooks = array_diff($methods, $base);
+                $hook_list = array_diff($methods, $base);
                 // 遍历钩子方法,注册到配置中
-                foreach ($hooks as $hook) {
+                foreach ($hook_list as $hook) {
                     // 确保配置中存在该钩子,如果不存在则初始化为空数组
                     if (!isset($config['hooks'][$hook])) {
                         $config['hooks'][$hook] = [];

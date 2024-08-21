@@ -80,7 +80,7 @@ abstract class Addons
         // 获取当前对象的类名
         $class = get_class($this);
         // 使用explode函数将类名按反斜线分割,然后取第二个元素作为插件名
-        [, $name,] = explode('\\', $class);
+        [, $name, ] = explode('\\', $class);
         // 将插件名设置到请求对象的addon属性中
         $this->request->addon = $name;
         // 返回插件名

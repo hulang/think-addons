@@ -31,7 +31,7 @@ composer require hulang/think-addons
 ];
 ```
 
-或者在 `config` 目录中新建`addons.php`,内容为:
+或者在多应用中 `config` 目录中新建`addons.php`,内容为:
 
 ```php
 <?php

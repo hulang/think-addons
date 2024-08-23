@@ -290,6 +290,22 @@ if (!function_exists('addons_url')) {
     }
 }
 
+if (!function_exists('get_addons_menu')) {
+    /**
+     * 获取插件菜单
+     * @param string $name
+     * @return mixed|array
+     */
+    function get_addons_menu($name)
+    {
+        $menu = app()->getRootPath() . 'addons' . DS . $name . DS . 'menu.php';
+        if (file_exists($menu)) {
+            return include_once $menu;
+        }
+        return [];
+    }
+}
+
 if (!function_exists('get_addons_list')) {
     /**
      * 获得插件列表

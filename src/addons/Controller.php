@@ -5,9 +5,6 @@ declare(strict_types=1);
 namespace think\addons;
 
 use think\App;
-use think\helper\Str;
-use think\facade\Lang;
-use think\facade\Config;
 use think\facade\View;
 
 class Controller
@@ -66,7 +63,8 @@ class Controller
     }
 
     // 初始化
-    protected function initialize() {
+    protected function initialize()
+    {
         // 初始化操作可以在这里进行
     }
 
@@ -77,7 +75,7 @@ class Controller
     final protected function getName()
     {
         $class = get_class($this);
-        [, $name, ] = explode('\\', $class);
+        [, $name,] = explode('\\', $class);
         $this->request->addon = $name;
         return $name;
     }

@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace think\addons;
 
 use think\Route;
-use think\facade\Config;
 use think\facade\Lang;
 use think\facade\Cache;
 use think\facade\Event;
+use think\facade\Config;
 use think\addons\middleware\Addons;
 use hulang\tool\FileHelper;
 
@@ -218,7 +218,7 @@ class Service extends \think\Service
             foreach ($list as $k => $v) {
                 if ($v['type'] == 'dir') {
                     $name = pathinfo($v['path_name'], PATHINFO_FILENAME);
-                    $plugin = strtolower($v['path_name'] . '\Plugin.php');
+                    $plugin = join(DIRECTORY_SEPARATOR, [$v['path_name'], 'Plugin.php']);
                     // 如果文件名是plugin.php,则认为该文件定义了插件的钩子方法
                     if (is_file($plugin)) {
                         // 获取插件类的所有方法

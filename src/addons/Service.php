@@ -213,29 +213,33 @@ class Service extends \think\Service
         // 获取ThinkPHP自带的插件类方法作为基线,用于后续比较
         $base = get_class_methods("\\think\\Addons");
         // 遍历插件目录下的所有文件,以寻找和注册插件的钩子
-        foreach (glob($this->getAddonsPath() . '*/*.php') as $addons_file) {
-            // 解析文件路径信息,获取插件名和文件名
-            $info = pathinfo($addons_file);
-            $name = pathinfo($info['dirname'], PATHINFO_FILENAME);
-            // 如果文件名是plugin.php,则认为该文件定义了插件的钩子方法
-            if (strtolower($info['filename']) === 'plugin') {
-                // 获取插件类的所有方法
-                $methods = (array)get_class_methods("\\addons\\" . $name . "\\" . $info['filename']);
-                // 通过比较基线方法,找出插件特有的方法,即钩子方法
-                $hook_list = array_diff($methods, $base);
-                // 遍历钩子方法,注册到配置中
-                foreach ($hook_list as $hook) {
-                    // 确保配置中存在该钩子,如果不存在则初始化为空数组
-                    if (!isset($config['hooks'][$hook])) {
-                        $config['hooks'][$hook] = [];
-                    }
-                    // 将配置中的钩子字符串转换为数组,以支持多个插件注册同一钩子
-                    if (is_string($config['hooks'][$hook])) {
-                        $config['hooks'][$hook] = explode(',', $config['hooks'][$hook]);
-                    }
-                    // 将当前插件添加到该钩子的注册列表中,避免重复添加
-                    if (!in_array($name, $config['hooks'][$hook])) {
-                        $config['hooks'][$hook][] = $name;
+        $list = FileHelper::getFolder($this->getAddonsPath());
+        if (!empty($list)) {
+            foreach ($list as $k => $v) {
+                if ($v['type'] == 'dir') {
+                    $name = pathinfo($v['path_name'], PATHINFO_FILENAME);
+                    $plugin = strtolower($v['path_name'] . '\Plugin.php');
+                    // 如果文件名是plugin.php,则认为该文件定义了插件的钩子方法
+                    if (is_file($plugin)) {
+                        // 获取插件类的所有方法
+                        $methods = (array)get_class_methods("\\addons\\" . $name . "\\Plugin");
+                        // 通过比较基线方法,找出插件特有的方法,即钩子方法
+                        $hook_list = array_diff($methods, $base);
+                        // 遍历钩子方法,注册到配置中
+                        foreach ($hook_list as $hook) {
+                            // 确保配置中存在该钩子,如果不存在则初始化为空数组
+                            if (!isset($config['hooks'][$hook])) {
+                                $config['hooks'][$hook] = [];
+                            }
+                            // 将配置中的钩子字符串转换为数组,以支持多个插件注册同一钩子
+                            if (is_string($config['hooks'][$hook])) {
+                                $config['hooks'][$hook] = explode(',', $config['hooks'][$hook]);
+                            }
+                            // 将当前插件添加到该钩子的注册列表中,避免重复添加
+                            if (!in_array($name, $config['hooks'][$hook])) {
+                                $config['hooks'][$hook][] = $name;
+                            }
+                        }
                     }
                 }
             }

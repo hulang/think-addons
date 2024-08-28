@@ -247,8 +247,8 @@ function addons_url($url = '', $param = [], $suffix = true, $domain = false);
 
 ```
 
-### 插件目录结构
-#### 最终生成的目录结构为
+#### 插件目录结构
+##### 最终生成的目录结构为
 
 ```html
 www  WEB部署目录（或者子目录）

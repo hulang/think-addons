@@ -1,16 +1,16 @@
-## ThinkPHP 8.0.0+ Addons Package
+### ThinkPHP 8.0.0+ Addons Package
 
 #### 环境
 
 - php >=8.0.0
 - ThinkPHP ^8.0.0
 
-### 安装
+#### 安装
 ```php
 composer require hulang/think-addons
 ```
 
-### 配置
+#### 配置
 
 系统安装后会自动在 `config` 目录中生成 `addons.php` 的配置文件
 
@@ -62,13 +62,13 @@ return [
 
 下面写一个例子：
 
-#### 创建 `test` 插件
+#### 创建`test`插件
 > 在`addons`目录中创建`test`目录
 
-#### 创建 `钩子` 实现类
+#### 创建`钩子`实现类
 > 在`test`目录中创建 `Plugin.php` 类文件.注意:类文件首字母需大写
 
-### 插件 `info.json` 文件基础信息
+#### 插件`info.json`文件基础信息
 
 ```shell
 {
@@ -185,7 +185,7 @@ class Index
 }
 ```
 
-### 使用钩子
+#### 使用钩子
 > 创建好插件后就可以在正常业务中使用该插件中的钩子了
 > 使用钩子的时候第二个参数可以省略
 

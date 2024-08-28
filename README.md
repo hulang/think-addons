@@ -17,13 +17,15 @@ composer require hulang/think-addons
 #### 公共配置
 
 ```php
-'addons' => [
-    // 是否自动读取取插件钩子配置信息（默认是开启）
-    'autoload' => true,
+declare(strict_types=1);
+
+return [
+    // 是否自动读取取插件钩子配置信息
+    'autoload' => false,
     // 当关闭自动获取配置时需要手动配置hooks信息
     'hooks' => [
         // 可以定义多个钩子
-        'testhook' => 'test', // 键为钩子名称，用于在业务中自定义钩子处理，值为实现该钩子的插件，
+        'testhook' => 'test' // 键为钩子名称，用于在业务中自定义钩子处理，值为实现该钩子的插件，
         // 多个插件可以用数组也可以用逗号分割
     ],
     'route' => [],
@@ -35,18 +37,22 @@ composer require hulang/think-addons
 
 ```php
 <?php
+
+declare(strict_types=1);
+
 return [
     // 是否自动读取取插件钩子配置信息
     'autoload' => false,
     // 当关闭自动获取配置时需要手动配置hooks信息
     'hooks' => [
         // 可以定义多个钩子
-        'testhook'=>'test' // 键为钩子名称，用于在业务中自定义钩子处理，值为实现该钩子的插件，
+        'testhook' => 'test' // 键为钩子名称，用于在业务中自定义钩子处理，值为实现该钩子的插件，
         // 多个插件可以用数组也可以用逗号分割
     ],
     'route' => [],
     'service' => [],
 ];
+
 ```
 
 #### 创建插件

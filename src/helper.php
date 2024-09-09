@@ -321,11 +321,17 @@ if (!function_exists('get_addons_list')) {
             $list = [];
             foreach ($results as $k => $v) {
                 if ($v['type'] == 'dir') {
+                    // 插件文件名
                     $pluginName = join(DS, [$v['path_name'], 'Plugin.php']);
                     if (!is_file($pluginName)) {
                         continue;
                     }
-                    $info = get_addons_info($v['name']);
+                    // 插件信息
+                    $infoFile = join(DS, [$v['path_name'], 'info.json']);
+                    if (!is_file($infoFile)) {
+                        continue;
+                    }
+                    $info = json_decode(FileHelper::readFile($infoFile), true);
                     if (!isset($info['name'])) {
                         continue;
                     }

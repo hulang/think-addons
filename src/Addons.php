@@ -43,8 +43,8 @@ abstract class Addons
         // 设置插件路径,用于后续的视图解析和其他文件操作
         $this->addon_path = $app->addons->getAddonsPath() . $this->name . DIRECTORY_SEPARATOR;
         // 定义插件的配置和信息的存储键名
-        $this->addon_config = "addon_{$this->name}_config";
-        $this->addon_info = "addon_{$this->name}_info";
+        $this->addon_config = sprintf('addon_%s_config', $this->name);
+        $this->addon_info = sprintf('addon_%s_info', $this->name);
         // 克隆视图引擎实例,用于插件的视图渲染
         $this->view = clone View::engine('Think');
         // 配置视图路径为插件的视图目录
@@ -80,7 +80,7 @@ abstract class Addons
         // 获取当前对象的类名
         $class = get_class($this);
         // 使用explode函数将类名按反斜线分割,然后取第二个元素作为插件名
-        [, $name, ] = explode('\\', $class);
+        [$use, $name, $plugin] = explode('\\', $class);
         // 将插件名设置到请求对象的addon属性中
         $this->request->addon = $name;
         // 返回插件名

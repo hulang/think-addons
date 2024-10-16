@@ -70,7 +70,7 @@ class Service extends \think\Service
             $pathArr = explode('/', str_replace('.html', '', str_replace('\\', '/', $path)));
             if ($pathArr[0] === 'addons') {
                 // 路由脚本
-                $execute = '\\taoser\\addons\\Route::execute';
+                $execute = '\\think\\addons\\Route::execute';
                 // 注册插件公共中间件
                 if (is_file($this->app->addons->getAddonsPath() . 'middleware.php')) {
                     $this->app->middleware->import(include $this->app->addons->getAddonsPath() . 'middleware.php', 'route');

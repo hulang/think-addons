@@ -311,7 +311,7 @@ class Service extends \think\Service
                 if ($v['type'] == 'dir') {
                     $fun_file = join(DIRECTORY_SEPARATOR, [$v['path_name'], 'fun.php']);
                     if (is_file($fun_file)) {
-                        include_once('common/fun/think.php');
+                        include_once($fun_file);
                     }
                     unset($fun_file);
                 }

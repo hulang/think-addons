@@ -34,6 +34,8 @@ class Service extends \think\Service
         $this->loadLang();
         // 自动加载插件的类文件,提高插件的使用便捷性
         $this->autoload();
+        // 加载插件函数文件
+        $this->loadFun();
         // 加载插件的事件处理,使得插件可以参与到应用的生命周期中
         $this->loadEvent();
         // 加载自定义路由
@@ -292,6 +294,26 @@ class Service extends \think\Service
                         unset($commands);
                     }
                     unset($console_file);
+                }
+            }
+        }
+    }
+
+    /**
+     * 加载插件函数文件
+     */
+    private function loadFun()
+    {
+        // 配置
+        $addons_dir = FileHelper::getFolder($this->addons_path);
+        if (!empty($addons_dir)) {
+            foreach ($addons_dir as $k => $v) {
+                if ($v['type'] == 'dir') {
+                    $fun_file = join(DIRECTORY_SEPARATOR, [$v['path_name'], 'fun.php']);
+                    if (is_file($fun_file)) {
+                        include_once('common/fun/think.php');
+                    }
+                    unset($fun_file);
                 }
             }
         }

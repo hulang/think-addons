@@ -182,13 +182,13 @@ class Service extends \think\Service
         if (!empty($results)) {
             foreach ($results as $k => $v) {
                 if ($v['type'] == 'dir') {
-                    $service_file = join(DIRECTORY_SEPARATOR, [$v['path_name'], 'service.json']);
-                    if (is_file($service_file)) {
-                        $j = json_decode($service_file, true);
+                    $serviceFile = join(DIRECTORY_SEPARATOR, [$v['path_name'], 'service.json']);
+                    if (is_file($serviceFile)) {
+                        $j = json_decode($serviceFile, true);
                         // 将当前插件的绑定信息合并到总的绑定数组中
                         $bind = array_merge($bind, $j);
                     }
-                    unset($service_file);
+                    unset($serviceFile);
                 }
             }
         }
@@ -260,11 +260,11 @@ class Service extends \think\Service
         if (!empty($addons_dir)) {
             foreach ($addons_dir as $k => $v) {
                 if ($v['type'] == 'dir') {
-                    $route_file = join(DIRECTORY_SEPARATOR, [$v['path_name'], 'route.php']);
-                    if (is_file($route_file)) {
-                        $this->loadRoutesFrom($route_file);;
+                    $routeFile = join(DIRECTORY_SEPARATOR, [$v['path_name'], 'route.php']);
+                    if (is_file($routeFile)) {
+                        $this->loadRoutesFrom($routeFile);;
                     }
-                    unset($route_file);
+                    unset($routeFile);
                 }
             }
         }
@@ -280,20 +280,20 @@ class Service extends \think\Service
         if (!empty($addons_dir)) {
             foreach ($addons_dir as $k => $v) {
                 if ($v['type'] == 'dir') {
-                    $console_file = join(DIRECTORY_SEPARATOR, [$v['path_name'], 'console.php']);
-                    if (is_file($console_file)) {
-                        $commands_config = include_once $console_file;
-                        $commands = [];
-                        if (isset($commands_config['commands'])) {
-                            $commands = array_merge($commands, $commands_config['commands']);
+                    $consoleFile = join(DIRECTORY_SEPARATOR, [$v['path_name'], 'console.php']);
+                    if (is_file($consoleFile)) {
+                        $config = include_once $consoleFile;
+                        $commandArr = [];
+                        if (isset($config['commands'])) {
+                            $commandArr = array_merge($commandArr, $config['commands']);
                         }
-                        if (!empty($commands)) {
-                            $this->commands($commands);
+                        if (!empty($commandArr)) {
+                            $this->commands($commandArr);
                         }
-                        unset($commands_config);
-                        unset($commands);
+                        unset($config);
+                        unset($commandArr);
                     }
-                    unset($console_file);
+                    unset($consoleFile);
                 }
             }
         }
@@ -309,11 +309,11 @@ class Service extends \think\Service
         if (!empty($addons_dir)) {
             foreach ($addons_dir as $k => $v) {
                 if ($v['type'] == 'dir') {
-                    $fun_file = join(DIRECTORY_SEPARATOR, [$v['path_name'], 'fun.php']);
-                    if (is_file($fun_file)) {
-                        include_once($fun_file);
+                    $funFile = join(DIRECTORY_SEPARATOR, [$v['path_name'], 'fun.php']);
+                    if (is_file($funFile)) {
+                        include_once($funFile);
                     }
-                    unset($fun_file);
+                    unset($funFile);
                 }
             }
         }
@@ -329,14 +329,14 @@ class Service extends \think\Service
         if (!empty($addons_dir)) {
             foreach ($addons_dir as $k => $v) {
                 if ($v['type'] == 'dir') {
-                    $command_file = join(DIRECTORY_SEPARATOR, [$v['path_name'], 'command.php']);
-                    if (is_file($command_file)) {
-                        $commandArr = include_once $command_file;
+                    $commandFile = join(DIRECTORY_SEPARATOR, [$v['path_name'], 'command.php']);
+                    if (is_file($commandFile)) {
+                        $commandArr = include_once $commandFile;
                         if (is_array($commandArr)) {
                             $this->commands($commandArr);
                         }
                     }
-                    unset($command_file);
+                    unset($commandFile);
                 }
             }
         }
